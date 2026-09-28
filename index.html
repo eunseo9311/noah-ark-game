@@ -1,0 +1,2655 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>노아의 방주 점프</title>
+<meta name="description" content="민트빛 하늘 아래 파도를 넘으며 사자, 비둘기, 올리브 가지를 모으는 노아의 방주 미니 게임">
+<meta name="theme-color" content="#9FE9D5">
+<meta property="og:type" content="website">
+<meta property="og:title" content="노아의 방주 점프">
+<meta property="og:description" content="파도를 넘으며 사자, 비둘기, 올리브 가지를 모아요. 교회 성도와 다음 세대를 위한 미니 게임">
+<meta property="og:url" content="https://eunseo9311.github.io/noah-ark-game/">
+<meta property="og:image" content="https://eunseo9311.github.io/noah-ark-game/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%239FE9D5'/%3E%3Cpath d='M14 30 32 19l18 11z' fill='%238C6245'/%3E%3Crect x='19' y='28' width='26' height='13' rx='3' fill='%23F1DCC0'/%3E%3Cpath d='M7 37c2 10 10 15 19 15h12c10 0 17-6 19-16-14 4-36 4-50 1z' fill='%23C49A6C'/%3E%3Cpath d='M0 54q16-7 32 0t32 0v10H0z' fill='%2343AFC4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&family=Tilt+Neon&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --ink: #163843;
+  --ink-soft: #3D6168;
+  --sky-top: #9FE9D5;
+  --sky-mid: #C4F4E6;
+  --sea: #3AA2BE;
+  --cream: #FFF8EE;
+  --latte: #C49A6C;
+  --latte-light: #DDB88D;
+  --latte-deep: #94694A;
+  --mocha: #7A5236;
+  --wave-blue: #5E8BFF;
+  --wave-violet: #A45CFF;
+  --neon-mint: #3FF5D0;
+  --neon-red: #FF2D55;
+  --glass-top: rgba(255, 255, 255, .50);
+  --glass-bottom: rgba(255, 255, 255, .16);
+  --glass-edge: rgba(255, 255, 255, .68);
+  --glass-shadow: rgba(20, 78, 84, .20);
+  --font-display: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --font-neon: "Tilt Neon", "Jua", "Apple SD Gothic Neo", sans-serif;
+}
+[hidden] { display: none !important; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+html, body { height: 100%; }
+html { background: linear-gradient(180deg, var(--sky-top), var(--sea)); }
+body {
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 62%, var(--sea) 100%);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Stage ───────────────────────────── */
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  cursor: pointer;
+}
+#game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.fx { position: absolute; inset: 0; pointer-events: none; }
+.fx-vignette {
+  background: radial-gradient(120% 95% at 50% 42%, transparent 58%, rgba(18, 72, 84, .22) 100%);
+}
+.fx-grain {
+  opacity: .11;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .08 0 0 0 0 .2 0 0 0 0 .22 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.fx-flash {
+  opacity: 0;
+  background: radial-gradient(circle at var(--fx, 25%) var(--fy, 60%), rgba(255, 255, 255, .95), rgba(255, 150, 190, .35) 38%, transparent 72%);
+}
+.fx-flash.on { animation: flash .42s ease-out; }
+@keyframes flash { from { opacity: 1; } to { opacity: 0; } }
+
+/* ── Frosted glass ───────────────────── */
+.glass {
+  background: linear-gradient(140deg, var(--glass-top), var(--glass-bottom));
+  border: 1px solid var(--glass-edge);
+  box-shadow: 0 10px 30px var(--glass-shadow), inset 0 1px 0 rgba(255, 255, 255, .8), inset 0 -1px 0 rgba(255, 255, 255, .2);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(16px) saturate(170%);
+}
+
+/* ── HUD ─────────────────────────────── */
+.hud {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) calc(env(safe-area-inset-right, 0px) + 16px) 0 calc(env(safe-area-inset-left, 0px) + 16px);
+  pointer-events: none;
+}
+.hud > * { pointer-events: auto; }
+.scoreboard {
+  border-radius: 24px;
+  padding: 10px 18px 12px;
+  min-width: 156px;
+  transition: opacity .35s ease, transform .35s ease;
+}
+.scoreboard.is-away { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+.score-label { display: block; font-size: 13px; letter-spacing: .12em; color: var(--ink-soft); }
+.score-value {
+  display: block;
+  font: 400 40px/1.05 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  transform-origin: left center;
+}
+.score-value.pop { animation: pop .34s cubic-bezier(.2, 1.7, .4, 1); }
+@keyframes pop { 40% { transform: scale(1.16); } }
+.score-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 6px; font-size: 13px; color: var(--ink-soft); }
+.score-meta b { font: 400 16px/1 var(--font-display); color: var(--ink); }
+.tallies { display: inline-flex; gap: 8px; }
+.tally { display: inline-flex; align-items: center; gap: 3px; }
+.tally canvas { width: 20px; height: 20px; }
+.hud-actions { display: flex; gap: 10px; }
+.icon-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+.icon-btn:hover { transform: translateY(-1px); }
+.icon-btn:active { transform: scale(.94); }
+.icon-btn svg { width: 22px; height: 22px; }
+.icon-btn .when-off { display: none; }
+.icon-btn[aria-pressed="false"] .when-on { display: none; }
+.icon-btn[aria-pressed="false"] .when-off { display: block; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 3px; box-shadow: 0 0 0 7px rgba(82, 220, 255, .55); }
+
+/* ── Screens ─────────────────────────── */
+.screen {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: calc(env(safe-area-inset-top, 0px) + 76px) 16px calc(env(safe-area-inset-bottom, 0px) + 128px);
+  text-align: center;
+  animation: screen-in .45s ease both;
+}
+@keyframes screen-in { from { opacity: 0; transform: translateY(12px); } }
+.screen p { margin: 0; }
+
+.eyebrow-neon {
+  font: 400 clamp(15px, 2.2vw, 20px)/1 var(--font-neon);
+  letter-spacing: .38em;
+  padding-left: .38em;
+  color: #0FB597;
+  text-shadow: 0 0 1px #FFFFFF, 0 0 10px rgba(63, 245, 208, .95), 0 0 24px rgba(34, 217, 182, .7);
+}
+.logo {
+  position: relative;
+  margin: 0;
+  font: 400 clamp(58px, 11vw, 118px)/1.02 var(--font-display);
+  letter-spacing: .02em;
+  text-wrap: balance;
+  animation: logo-float 4.8s ease-in-out infinite;
+}
+.logo::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  color: var(--cream);
+  -webkit-text-stroke: .17em var(--cream);
+  filter: drop-shadow(0 .06em 0 #E4C7A1) drop-shadow(0 .16em .26em rgba(20, 86, 88, .30));
+}
+.logo-fill {
+  position: relative;
+  z-index: 1;
+  color: var(--latte);
+  background: linear-gradient(180deg, #E2BF93 0%, #BF905F 55%, #8F6446 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+@keyframes logo-float { 50% { transform: translateY(-6px) rotate(-.6deg); } }
+.tagline { font-size: clamp(15px, 2vw, 18px); color: var(--ink-soft); }
+
+.wave-text {
+  font: 400 clamp(21px, 3.4vw, 31px)/1.35 var(--font-display);
+  color: var(--ink);
+  padding-top: 6px;
+}
+.wave-text .ch {
+  display: inline-block;
+  white-space: pre;
+  animation: wave 1.7s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 65ms);
+}
+.wave-text .ch.hl { color: #4E63F5; text-shadow: 0 0 14px rgba(110, 130, 255, .55); }
+@keyframes wave {
+  0%, 56%, 100% { transform: translateY(0); }
+  22% { transform: translateY(-.34em); }
+  40% { transform: translateY(.06em); }
+}
+.prompt-sub { font-size: 14px; color: var(--ink-soft); }
+
+.legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 10px; margin: 6px 0 0; padding: 0; list-style: none; max-width: 640px; }
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px 5px 7px;
+  border-radius: 999px;
+  font-size: 15px;
+  color: var(--ink);
+}
+.legend canvas { width: 30px; height: 30px; }
+.legend b { font: 400 16px/1 var(--font-display); color: #B8641E; margin-left: 2px; }
+.legend .warn b { color: #5B4BE0; }
+.title-best { font-size: 15px; color: var(--ink-soft); }
+.title-best b { font: 400 22px/1 var(--font-display); color: var(--ink); margin: 0 2px; }
+.verse { font-size: 14px; line-height: 1.6; color: var(--ink-soft); max-width: 34ch; }
+.verse cite { font-style: normal; white-space: nowrap; color: var(--ink); }
+
+/* ── Pause ───────────────────────────── */
+.screen.pause, .screen.over { cursor: default; }
+.screen.pause { background: rgba(14, 50, 58, .30); }
+.card {
+  width: min(380px, 100%);
+  border-radius: 28px;
+  padding: 26px 22px 22px;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+.card h2 { margin: 0; font: 400 32px/1.1 var(--font-display); color: var(--ink); }
+.card p { color: var(--ink-soft); }
+.hint { font-size: 13px; color: var(--ink-soft); }
+
+/* ── Game over ───────────────────────── */
+.screen.over { background: radial-gradient(ellipse at 50% 38%, rgba(18, 38, 56, .38), rgba(9, 22, 34, .70)); gap: 16px; }
+.neon-sign {
+  margin: 0;
+  font: 400 clamp(44px, 10vw, 92px)/1 var(--font-neon);
+  letter-spacing: .08em;
+  white-space: nowrap;
+  color: #FFE8EE;
+  padding: .2em .55em .24em;
+  border: 3px solid #FF8FA6;
+  border-radius: 30px;
+  text-shadow: 0 0 3px #FFFFFF, 0 0 10px #FF4D6D, 0 0 24px var(--neon-red), 0 0 52px #FF1744;
+  box-shadow: 0 0 6px var(--neon-red), 0 0 20px var(--neon-red), 0 0 46px rgba(255, 45, 85, .55), inset 0 0 16px rgba(255, 45, 85, .55);
+  animation: neon-flicker 3.4s linear infinite;
+}
+.neon-sign .buzz { animation: neon-buzz 1.9s steps(1, end) infinite; }
+@keyframes neon-flicker {
+  0%, 16%, 21%, 24%, 58%, 63%, 100% {
+    opacity: 1;
+    text-shadow: 0 0 3px #FFFFFF, 0 0 10px #FF4D6D, 0 0 24px #FF2D55, 0 0 52px #FF1744;
+    box-shadow: 0 0 6px #FF2D55, 0 0 20px #FF2D55, 0 0 46px rgba(255, 45, 85, .55), inset 0 0 16px rgba(255, 45, 85, .55);
+  }
+  18%, 22.5%, 60% {
+    opacity: .42;
+    text-shadow: 0 0 2px rgba(255, 77, 109, .5);
+    box-shadow: 0 0 2px rgba(255, 45, 85, .4);
+  }
+}
+@keyframes neon-buzz { 0%, 70%, 100% { opacity: 1; } 72%, 78% { opacity: .15; } 75% { opacity: .8; } }
+.over-sub { color: #FFE6EC; font-size: 16px; text-shadow: 0 1px 8px rgba(0, 0, 0, .35); }
+.result {
+  width: min(400px, 100%);
+  border-radius: 28px;
+  padding: 18px 22px 20px;
+  display: grid;
+  gap: 14px;
+  color: #F4FFFD;
+  --glass-top: rgba(255, 255, 255, .26);
+  --glass-bottom: rgba(255, 255, 255, .08);
+  --glass-edge: rgba(255, 255, 255, .42);
+  --glass-shadow: rgba(0, 0, 0, .28);
+}
+.result-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.result-label { font-size: 14px; letter-spacing: .06em; color: rgba(244, 255, 253, .82); }
+.final-score { font: 400 54px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.final-best { font: 400 22px/1 var(--font-display); }
+.badge {
+  font: 400 15px/1 var(--font-display);
+  color: #3B2A00;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #FFF3A0, #FFD84D 45%, #FFB86B);
+  box-shadow: 0 0 18px rgba(255, 216, 77, .7);
+  animation: badge 1.2s ease-in-out infinite;
+}
+@keyframes badge { 50% { transform: scale(1.08) rotate(-3deg); } }
+.result-divider { height: 1px; background: rgba(255, 255, 255, .28); }
+.result .tallies { gap: 14px; }
+.result .tally { gap: 6px; font: 400 20px/1 var(--font-display); }
+.result .tally canvas { width: 28px; height: 28px; }
+.btn-primary {
+  font: 400 23px/1 var(--font-display);
+  letter-spacing: .04em;
+  color: #FFFCF6;
+  padding: 16px 40px 15px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  background: linear-gradient(180deg, #D9B083 0%, #B8875A 60%, #A5774D 100%);
+  box-shadow: 0 6px 0 #7C5738, 0 16px 28px rgba(0, 0, 0, .26), inset 0 2px 0 rgba(255, 255, 255, .45);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #7C5738, 0 20px 30px rgba(0, 0, 0, .26), inset 0 2px 0 rgba(255, 255, 255, .45); }
+.btn-primary:active { transform: translateY(5px); box-shadow: 0 1px 0 #7C5738, 0 8px 16px rgba(0, 0, 0, .24), inset 0 2px 0 rgba(255, 255, 255, .45); }
+.screen.over .hint { color: rgba(244, 255, 253, .78); }
+
+/* ── Toast ───────────────────────────── */
+.toast {
+  position: absolute;
+  left: 50%;
+  top: calc(env(safe-area-inset-top, 0px) + 136px);
+  z-index: 6;
+  max-width: calc(100% - 32px);
+  padding: 10px 20px;
+  border-radius: 999px;
+  font: 400 18px/1.25 var(--font-display);
+  color: var(--ink);
+  text-align: center;
+  opacity: 0;
+  transform: translate(-50%, -10px);
+  transition: opacity .35s ease, transform .35s ease;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* 터치 기기와 키보드 기기에서 안내 문구를 나눠 보여 줍니다 */
+.is-touch .only-key { display: none; }
+
+/* 가로로 누운 휴대폰처럼 낮은 화면 */
+@media (max-height: 560px) {
+  .screen { gap: 8px; padding-top: calc(env(safe-area-inset-top, 0px) + 64px); padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); }
+  .logo { font-size: clamp(42px, 13vh, 72px); }
+  .tagline, .verse, .prompt-sub { display: none; }
+  .legend li { font-size: 13px; padding: 3px 12px 3px 5px; }
+  .legend canvas { width: 24px; height: 24px; }
+  .neon-sign { font-size: clamp(34px, 11vh, 60px); }
+  .final-score { font-size: 40px; }
+}
+@media (max-width: 420px) {
+  .scoreboard { min-width: 0; padding: 8px 14px 10px; }
+  .score-value { font-size: 32px; }
+  .icon-btn { width: 44px; height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo, .wave-text .ch, .neon-sign, .neon-sign .buzz, .badge, .screen { animation: none !important; }
+}
+</style>
+</head>
+<body>
+<main class="stage" id="stage">
+  <canvas id="game" role="img" aria-label="노아의 방주가 큰 파도를 넘으며 동물 친구들을 모으는 게임 화면"></canvas>
+  <div class="fx fx-vignette" aria-hidden="true"></div>
+  <div class="fx fx-grain" aria-hidden="true"></div>
+  <div class="fx fx-flash" id="flash" aria-hidden="true"></div>
+
+  <div class="hud">
+    <div class="scoreboard glass is-away" id="scoreboard">
+      <span class="score-label">점수</span>
+      <strong class="score-value" id="score">0</strong>
+      <div class="score-meta">
+        <span>최고 <b id="hud-best">0</b></span>
+        <span class="tallies" aria-label="구한 친구들">
+          <span class="tally" title="사자"><canvas data-icon="lion" aria-hidden="true"></canvas><b id="n-lion">0</b></span>
+          <span class="tally" title="비둘기"><canvas data-icon="dove" aria-hidden="true"></canvas><b id="n-dove">0</b></span>
+          <span class="tally" title="올리브 가지"><canvas data-icon="olive" aria-hidden="true"></canvas><b id="n-olive">0</b></span>
+        </span>
+      </div>
+    </div>
+    <div class="hud-actions">
+      <button type="button" class="icon-btn glass" id="btn-sound" aria-label="소리" aria-pressed="true" title="소리 켜기/끄기 (M)">
+        <svg class="when-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18.2 6.5a7.5 7.5 0 0 1 0 11"/></svg>
+        <svg class="when-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+      </button>
+      <button type="button" class="icon-btn glass" id="btn-pause" aria-label="잠깐 멈추기" title="잠깐 멈추기 (P)" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="2" fill="currentColor"/><rect x="13.8" y="5" width="4.2" height="14" rx="2" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <section class="screen title" id="screen-title" aria-labelledby="title-heading">
+    <p class="eyebrow-neon" aria-hidden="true">NOAH'S ARK</p>
+    <h1 class="logo" id="title-heading" data-text="노아의 방주"><span class="logo-fill">노아의 방주</span></h1>
+    <p class="tagline">동물 친구들을 태우고 큰 물결을 넘어가요</p>
+    <p class="wave-text" id="prompt"></p>
+    <p class="prompt-sub only-key">마우스를 클릭해도 방주가 뛰어올라요</p>
+    <ul class="legend" aria-label="게임 방법">
+      <li class="glass"><canvas data-icon="lion" aria-hidden="true"></canvas><span>사자 <b>+100</b></span></li>
+      <li class="glass"><canvas data-icon="dove" aria-hidden="true"></canvas><span>비둘기 <b>+100</b></span></li>
+      <li class="glass"><canvas data-icon="olive" aria-hidden="true"></canvas><span>올리브 가지 <b>+100</b></span></li>
+      <li class="glass warn"><canvas data-icon="wave" aria-hidden="true"></canvas><span>파도는 <b>피하기</b></span></li>
+    </ul>
+    <p class="title-best">최고 기록 <b id="title-best">0</b>점</p>
+    <p class="verse">“내가 내 무지개를 구름 속에 두었나니” <cite>창세기 9:13</cite></p>
+  </section>
+
+  <section class="screen pause" id="screen-pause" aria-labelledby="pause-heading" hidden>
+    <div class="card glass">
+      <h2 id="pause-heading">잠깐 쉬어 가요</h2>
+      <p>방주가 물 위에서 기다리고 있어요.</p>
+      <button type="button" class="btn-primary" id="btn-resume">계속하기</button>
+      <p class="hint only-key">스페이스바나 P 키를 눌러도 이어서 할 수 있어요</p>
+    </div>
+  </section>
+
+  <section class="screen over" id="screen-over" aria-labelledby="over-heading" hidden>
+    <h2 class="neon-sign" id="over-heading" aria-label="게임 오버">GAME <span class="buzz">O</span>VER</h2>
+    <p class="over-sub" id="over-sub">방주가 큰 파도에 부딪혔어요</p>
+    <div class="result glass" role="status">
+      <div class="result-row">
+        <span class="result-label">이번 점수</span>
+        <strong class="final-score" id="final-score">0</strong>
+      </div>
+      <div class="result-row">
+        <span class="result-label">최고 점수 <b class="final-best" id="final-best">0</b></span>
+        <span class="badge" id="new-record" hidden>새 기록!</span>
+      </div>
+      <div class="result-divider" aria-hidden="true"></div>
+      <div class="result-row">
+        <span class="result-label">구한 친구들</span>
+        <span class="tallies">
+          <span class="tally" title="사자"><canvas data-icon="lion" aria-hidden="true"></canvas><span id="f-lion">0</span></span>
+          <span class="tally" title="비둘기"><canvas data-icon="dove" aria-hidden="true"></canvas><span id="f-dove">0</span></span>
+          <span class="tally" title="올리브 가지"><canvas data-icon="olive" aria-hidden="true"></canvas><span id="f-olive">0</span></span>
+        </span>
+      </div>
+    </div>
+    <button type="button" class="btn-primary" id="btn-retry">다시하기</button>
+    <p class="hint only-key">스페이스바를 눌러도 다시 시작해요</p>
+  </section>
+
+  <div class="toast glass" id="toast" role="status" aria-live="polite"></div>
+</main>
+<script>
+(() => {
+'use strict';
+
+/* ════════════════════════════════════════
+   1. 기본 설정과 도우미
+   ════════════════════════════════════════ */
+const REF_H = 720;        // 가로 화면 기준 세계 높이(단위)
+const MIN_VIEW_W = 640;   // 좁은 화면에서도 보여 줄 최소 세계 너비
+const SEA_DEPTH = 118;    // 화면 아래 바다 띠의 높이
+const TAU = Math.PI * 2;
+
+const PHYS = {
+  gravity: 1500,     // 아래로 끌어당기는 힘
+  jumpV: -500,       // 점프가 도달하는 위쪽 속도
+  boostTime: 0.1,    // 점프 힘을 부드럽게 싣는 시간(초)
+  boostRate: 38,
+  maxFall: 640,
+  floatK: 520,       // 물에 떠오르는 부력 스프링
+  floatC: 26,
+  ceiling: 78,
+};
+
+const ITEM_TYPES = {
+  lion:  { label: '사자',       color: '#FFE03A', ink: '#C27A0E', glow: 'rgba(255, 214, 40, .9)' },
+  dove:  { label: '비둘기',     color: '#FF9A3D', ink: '#C4531A', glow: 'rgba(255, 150, 60, .9)' },
+  olive: { label: '올리브 가지', color: '#A8F54A', ink: '#4F9A1E', glow: 'rgba(150, 240, 80, .9)' },
+};
+const ITEM_POINTS = 100;
+
+const WAVE_GLOW = 'rgba(122, 98, 255, .8)';
+
+const $ = (id) => document.getElementById(id);
+const stage = $('stage');
+const canvas = $('game');
+const ctx = canvas.getContext('2d');
+
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+const chance = (p) => Math.random() < p;
+const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+const smoothstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const fmt = (n) => Math.floor(n).toLocaleString('ko-KR');
+
+function pickWeighted(table) {
+  let total = 0;
+  for (const k in table) total += table[k];
+  let r = Math.random() * total;
+  for (const k in table) { r -= table[k]; if (r <= 0) return k; }
+  return Object.keys(table)[0];
+}
+
+const store = {
+  get(key) { try { return window.localStorage.getItem('noah-ark:' + key); } catch (e) { return null; } },
+  set(key, value) { try { window.localStorage.setItem('noah-ark:' + key, String(value)); } catch (e) { /* 저장소를 못 쓰는 환경 */ } },
+};
+
+const motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+const reducedMotion = () => !!(motionQuery && motionQuery.matches);
+const isTouch = !!(window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
+if (isTouch) document.documentElement.classList.add('is-touch');
+
+/* ════════════════════════════════════════
+   2. 소리 (Web Audio로 직접 합성)
+   ════════════════════════════════════════ */
+const audio = {
+  ctx: null,
+  master: null,
+  noiseBuf: null,
+  muted: store.get('muted') === '1',
+  ensure() {
+    if (this.muted) return null;
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try { this.ctx = new AC(); } catch (e) { return null; }
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0.5;
+      this.master.connect(this.ctx.destination);
+      const len = this.ctx.sampleRate;
+      this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+      const data = this.noiseBuf.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    }
+    if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+    return this.ctx;
+  },
+  tone(freq, dur, opt = {}) {
+    const ac = this.ensure();
+    if (!ac) return;
+    const { type = 'sine', vol = 0.16, to = 0, delay = 0, attack = 0.01 } = opt;
+    const t0 = ac.currentTime + delay;
+    const osc = ac.createOscillator();
+    const g = ac.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    if (to) osc.frequency.exponentialRampToValueAtTime(to, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g);
+    g.connect(this.master);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.05);
+  },
+  noise(dur, opt = {}) {
+    const ac = this.ensure();
+    if (!ac) return;
+    const { vol = 0.2, freq = 900, q = 0.8, delay = 0, type = 'lowpass' } = opt;
+    const t0 = ac.currentTime + delay;
+    const src = ac.createBufferSource();
+    src.buffer = this.noiseBuf;
+    const f = ac.createBiquadFilter();
+    f.type = type;
+    f.frequency.value = freq;
+    f.Q.value = q;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(vol, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(f);
+    f.connect(g);
+    g.connect(this.master);
+    src.start(t0, Math.random() * 0.5, dur + 0.05);
+  },
+  jump()   { this.tone(340, 0.17, { vol: 0.11, to: 600 }); },
+  splash() { this.noise(0.24, { vol: 0.09, freq: 1300, type: 'bandpass', q: 0.9 }); },
+  pickup() {
+    this.tone(988, 0.12, { type: 'triangle', vol: 0.12 });
+    this.tone(1480, 0.22, { type: 'triangle', vol: 0.1, delay: 0.07 });
+  },
+  crash() {
+    this.noise(0.5, { vol: 0.3, freq: 650 });
+    this.tone(200, 0.55, { vol: 0.26, to: 50 });
+  },
+  record() { [784, 988, 1175, 1568].forEach((f, i) => this.tone(f, 0.24, { type: 'triangle', vol: 0.09, delay: i * 0.09 })); },
+  start()  { this.tone(523, 0.14, { type: 'triangle', vol: 0.09 }); this.tone(784, 0.2, { type: 'triangle', vol: 0.09, delay: 0.08 }); },
+};
+
+/* ════════════════════════════════════════
+   3. 화면 크기와 좌표계
+   ════════════════════════════════════════ */
+// 세계 좌표는 높이 720 기준 단위입니다. 좁은 세로 화면에서는 너비 640을 보장하도록 축소합니다.
+const view = { cssW: 1, cssH: 1, dpr: 1, scale: 1, ppu: 1, W: 640, H: 720, seaY: 602, arkX: 160 };
+const spriteCache = new Map();
+
+function makeLayer(wu, hu) {
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.ceil(wu * view.ppu));
+  c.height = Math.max(1, Math.ceil(hu * view.ppu));
+  const g = c.getContext('2d');
+  g.setTransform(view.ppu, 0, 0, view.ppu, 0, 0);
+  return { c, g };
+}
+
+/* ════════════════════════════════════════
+   4. 경로와 충돌 도우미
+   ════════════════════════════════════════ */
+// 경로는 ['M',x,y] ['L',x,y] ['Q',cx,cy,x,y] ['C',c1x,c1y,c2x,c2y,x,y] ['Z'] 명령 배열로 다룹니다.
+function addPath(g, cmds) {
+  for (const c of cmds) {
+    switch (c[0]) {
+      case 'M': g.moveTo(c[1], c[2]); break;
+      case 'L': g.lineTo(c[1], c[2]); break;
+      case 'Q': g.quadraticCurveTo(c[1], c[2], c[3], c[4]); break;
+      case 'C': g.bezierCurveTo(c[1], c[2], c[3], c[4], c[5], c[6]); break;
+      case 'Z': g.closePath(); break;
+    }
+  }
+}
+function tracePath(g, cmds) { g.beginPath(); addPath(g, cmds); }
+
+function samplePath(cmds, steps = 10) {
+  const pts = [];
+  let x = 0, y = 0;
+  for (const c of cmds) {
+    if (c[0] === 'M' || c[0] === 'L') {
+      x = c[1]; y = c[2]; pts.push([x, y]);
+    } else if (c[0] === 'Q') {
+      for (let i = 1; i <= steps; i++) {
+        const t = i / steps, u = 1 - t;
+        pts.push([u * u * x + 2 * u * t * c[1] + t * t * c[3], u * u * y + 2 * u * t * c[2] + t * t * c[4]]);
+      }
+      x = c[3]; y = c[4];
+    } else if (c[0] === 'C') {
+      for (let i = 1; i <= steps; i++) {
+        const t = i / steps, u = 1 - t;
+        const a = u * u * u, b = 3 * u * u * t, d = 3 * u * t * t, e = t * t * t;
+        pts.push([a * x + b * c[1] + d * c[3] + e * c[5], a * y + b * c[2] + d * c[4] + e * c[6]]);
+      }
+      x = c[5]; y = c[6];
+    }
+  }
+  return pts;
+}
+
+function makePoly(pts) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const p of pts) {
+    if (p[0] < x0) x0 = p[0];
+    if (p[0] > x1) x1 = p[0];
+    if (p[1] < y0) y0 = p[1];
+    if (p[1] > y1) y1 = p[1];
+  }
+  return { pts, x0, y0, x1, y1 };
+}
+
+function pointInPoly(px, py, pts) {
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const xi = pts[i][0], yi = pts[i][1], xj = pts[j][0], yj = pts[j][1];
+    if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+function circleHitsPoly(cx, cy, r, poly) {
+  if (cx + r < poly.x0 || cx - r > poly.x1 || cy + r < poly.y0 || cy - r > poly.y1) return false;
+  const pts = poly.pts;
+  if (pointInPoly(cx, cy, pts)) return true;
+  const r2 = r * r;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const ax = pts[j][0], ay = pts[j][1], bx = pts[i][0], by = pts[i][1];
+    const dx = bx - ax, dy = by - ay;
+    const len2 = dx * dx + dy * dy || 1;
+    const t = clamp(((cx - ax) * dx + (cy - ay) * dy) / len2, 0, 1);
+    const qx = ax + dx * t - cx, qy = ay + dy * t - cy;
+    if (qx * qx + qy * qy < r2) return true;
+  }
+  return false;
+}
+
+function circlePath(g, x, y, r) { g.moveTo(x + r, y); g.arc(x, y, r, 0, TAU); }
+
+function starPath(g, r, inner = 0.46, points = 5) {
+  g.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const rr = i % 2 ? r * inner : r;
+    const a = -Math.PI / 2 + (i * Math.PI) / points;
+    if (i === 0) g.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+    else g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+  }
+  g.closePath();
+}
+
+function sparklePath(g, r) {
+  // 네 갈래로 반짝이는 별
+  g.beginPath();
+  g.moveTo(0, -r);
+  g.quadraticCurveTo(r * 0.14, -r * 0.14, r, 0);
+  g.quadraticCurveTo(r * 0.14, r * 0.14, 0, r);
+  g.quadraticCurveTo(-r * 0.14, r * 0.14, -r, 0);
+  g.quadraticCurveTo(-r * 0.14, -r * 0.14, 0, -r);
+  g.closePath();
+}
+
+/* ════════════════════════════════════════
+   5. 배경: 하늘, 해, 무지개, 언덕, 구름, 비, 바다
+   ════════════════════════════════════════ */
+const scene = {
+  clock: 0,        // 늘 흐르는 장식용 시간
+  phase: 0,        // 방주가 나아간 거리(패럴랙스용)
+  rainAmt: 0.5,
+  rainbowAmt: 0,
+  sky: null,
+  sunGlow: null,
+  frontWater: null,
+  cloudSprites: [],
+  stormSprite: null,
+  rainbowSprite: null,
+  clouds: [],
+  rain: [],
+};
+
+const CLOUD_SHAPES = [
+  [[0.20, 0.62, 0.20], [0.38, 0.44, 0.27], [0.60, 0.40, 0.25], [0.79, 0.60, 0.19], [0.50, 0.64, 0.23]],
+  [[0.22, 0.60, 0.21], [0.45, 0.42, 0.31], [0.72, 0.56, 0.23], [0.58, 0.66, 0.21]],
+  [[0.15, 0.66, 0.15], [0.31, 0.50, 0.22], [0.52, 0.38, 0.26], [0.72, 0.48, 0.22], [0.87, 0.66, 0.14], [0.50, 0.68, 0.21]],
+];
+const CLOUD_PAL = { body: '#FFFFFF', shade: '#D2F0E8', glow: 'rgba(255, 255, 255, .9)' };
+const STORM_PAL = { body: '#CDC7F2', shade: '#A89FDD', glow: 'rgba(130, 110, 230, .45)' };
+
+const WATER = [
+  { off: -20, amp: 3.5, len: 170, par: 0.25, amb: 14, fill: '#ABEBE1' },
+  { off: -5,  amp: 6,   len: 230, par: 0.55, amb: 22, fill: '#7ADBD1' },
+  { off: 12,  amp: 7.5, len: 300, par: 1.0,  amb: 30, fill: null },
+];
+const [WATER_BACK, WATER_MID, WATER_FRONT] = WATER;
+
+function makeCloudSprite(shape, pal) {
+  const w = 240, h = 120, pad = 24;
+  const L = makeLayer(w + pad * 2, h + pad * 2);
+  const g = L.g;
+  g.translate(pad, pad);
+  const flat = h * 0.82;
+  const puffs = (dy, grow) => {
+    g.beginPath();
+    for (const [x, y, r] of shape) circlePath(g, x * w, y * h + dy, r * h + grow);
+  };
+  g.save();
+  g.beginPath();
+  g.rect(-pad, -pad, w + pad * 2, flat + pad);
+  g.clip();
+  g.shadowColor = pal.glow;
+  g.shadowBlur = 14 * view.ppu;
+  puffs(6, 0);
+  g.fillStyle = pal.shade;
+  g.fill();
+  g.shadowBlur = 0;
+  puffs(0, 0);
+  g.fillStyle = pal.body;
+  g.fill();
+  g.restore();
+  // 아랫면을 둥글게 다듬는 그림자 띠
+  g.fillStyle = pal.shade;
+  g.globalAlpha = 0.9;
+  g.beginPath();
+  g.roundRect ? g.roundRect(w * 0.1, flat - 7, w * 0.8, 9, 5) : g.rect(w * 0.1, flat - 7, w * 0.8, 9);
+  g.fill();
+  g.globalAlpha = 1;
+  return { c: L.c, w: w + pad * 2, h: h + pad * 2 };
+}
+
+function makeRainbowSprite() {
+  const R = 520, band = 13, pad = 40;
+  const colors = ['#FF8FB1', '#FFB86B', '#FFE66D', '#8CF0A0', '#7CC8FF', '#B69CFF'];
+  const w = R * 2 + pad * 2, h = R + pad * 2;
+  const L = makeLayer(w, h);
+  const g = L.g;
+  g.translate(w / 2, R + pad);
+  g.shadowBlur = 16 * view.ppu;
+  colors.forEach((col, i) => {
+    g.beginPath();
+    g.arc(0, 0, R - i * band, Math.PI, TAU);
+    g.strokeStyle = col;
+    g.shadowColor = col;
+    g.lineWidth = band + 1.5;
+    g.stroke();
+  });
+  return { c: L.c, w, h, R, pad };
+}
+
+function newCloud(x, near) {
+  return {
+    x,
+    near,
+    y: near ? rand(34, view.seaY * 0.42) : rand(24, view.seaY * 0.55),
+    s: near ? rand(0.72, 1.12) : rand(0.4, 0.68),
+    kind: (Math.random() * CLOUD_SHAPES.length) | 0,
+    bob: rand(0, TAU),
+    drift: rand(5, 14),
+  };
+}
+function newDrop(anywhere) {
+  return {
+    x: rand(-40, view.W + 160),
+    y: anywhere ? rand(-40, view.seaY) : rand(-90, -10),
+    len: rand(14, 26),
+    v: rand(620, 820),
+  };
+}
+
+function buildScene() {
+  const { W, H, seaY } = view;
+  scene.sky = ctx.createLinearGradient(0, 0, 0, seaY);
+  scene.sky.addColorStop(0, '#94E4CF');
+  scene.sky.addColorStop(0.55, '#C2F3E4');
+  scene.sky.addColorStop(1, '#EEFDF7');
+
+  const sx = W * 0.8, sy = Math.min(120, seaY * 0.2);
+  scene.sunGlow = ctx.createRadialGradient(sx, sy, 20, sx, sy, 250);
+  scene.sunGlow.addColorStop(0, 'rgba(255, 250, 214, .95)');
+  scene.sunGlow.addColorStop(0.35, 'rgba(255, 244, 196, .45)');
+  scene.sunGlow.addColorStop(1, 'rgba(255, 244, 196, 0)');
+
+  scene.frontWater = ctx.createLinearGradient(0, seaY, 0, H);
+  scene.frontWater.addColorStop(0, '#62D5CB');
+  scene.frontWater.addColorStop(0.45, '#43AFC4');
+  scene.frontWater.addColorStop(1, '#3187B5');
+
+  scene.cloudSprites = CLOUD_SHAPES.map((s) => makeCloudSprite(s, CLOUD_PAL));
+  scene.stormSprite = makeCloudSprite(CLOUD_SHAPES[2], STORM_PAL);
+  scene.rainbowSprite = makeRainbowSprite();
+
+  const want = Math.ceil(W / 150) + 3;
+  if (scene.clouds.length !== want) {
+    scene.clouds = [];
+    for (let i = 0; i < want; i++) scene.clouds.push(newCloud(rand(-120, W + 60), i % 3 === 0));
+  } else {
+    for (const c of scene.clouds) c.y = Math.min(c.y, seaY * 0.55);
+  }
+  if (!scene.rain.length) scene.rain = Array.from({ length: 90 }, () => newDrop(true));
+}
+
+function updateScene(dt, speed) {
+  scene.clock += dt;
+  scene.phase += speed * dt;
+  const { W } = view;
+  for (const c of scene.clouds) {
+    c.x -= (speed * (c.near ? 0.2 : 0.08) + c.drift) * dt;
+    c.bob += dt * 0.6;
+    const spr = scene.cloudSprites[c.kind];
+    if (spr && c.x + spr.w * c.s < -20) Object.assign(c, newCloud(W + rand(20, 220), c.near));
+  }
+  const wind = 90 + speed * 0.3;
+  for (const d of scene.rain) {
+    d.y += d.v * dt;
+    d.x -= wind * dt;
+    if (d.y > view.seaY + 6 || d.x < -40) Object.assign(d, newDrop(false));
+  }
+}
+
+function waterY(layer, x) {
+  const p = scene.phase * layer.par + scene.clock * layer.amb;
+  const k = TAU / layer.len;
+  return view.seaY + layer.off + Math.sin((x + p) * k) * layer.amp + Math.sin((x + p * 0.7) * k * 2.3 + 1.7) * layer.amp * 0.35;
+}
+
+function drawSky(g) {
+  const { W, seaY } = view;
+  g.fillStyle = scene.sky;
+  g.fillRect(0, 0, W, seaY + 30);
+  if (scene.rainAmt > 0.01) {
+    g.fillStyle = `rgba(126, 140, 196, ${0.1 * scene.rainAmt})`;
+    g.fillRect(0, 0, W, seaY + 30);
+  }
+}
+
+function drawSun(g) {
+  const x = view.W * 0.8, y = Math.min(120, view.seaY * 0.2);
+  g.fillStyle = scene.sunGlow;
+  g.fillRect(x - 260, y - 260, 520, 520);
+  g.save();
+  g.translate(x, y);
+  g.rotate(scene.clock * 0.05);
+  g.strokeStyle = 'rgba(255, 246, 205, .75)';
+  g.lineCap = 'round';
+  g.lineWidth = 6;
+  g.beginPath();
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * TAU;
+    g.moveTo(Math.cos(a) * 60, Math.sin(a) * 60);
+    g.lineTo(Math.cos(a) * 76, Math.sin(a) * 76);
+  }
+  g.stroke();
+  g.restore();
+  g.beginPath();
+  g.arc(x, y, 44, 0, TAU);
+  g.fillStyle = '#FFF7D2';
+  g.fill();
+  g.lineWidth = 5;
+  g.strokeStyle = 'rgba(255, 232, 150, .7)';
+  g.stroke();
+}
+
+function drawRainbow(g) {
+  if (scene.rainbowAmt < 0.01) return;
+  const s = scene.rainbowSprite;
+  const cx = view.W * 0.6, cy = view.seaY + 30;
+  g.globalAlpha = scene.rainbowAmt * 0.62;
+  g.drawImage(s.c, cx - s.w / 2, cy - s.R - s.pad, s.w, s.h);
+  g.globalAlpha = 1;
+}
+
+function drawHills(g) {
+  const { W, seaY } = view;
+  const humps = (fill, par, period, list) => {
+    const off = ((scene.phase * par) % period + period) % period;
+    g.fillStyle = fill;
+    g.beginPath();
+    for (let base = -off - period; base < W + period; base += period) {
+      for (const [dx, rx, ry] of list) {
+        g.moveTo(base + dx - rx, seaY);
+        g.ellipse(base + dx, seaY, rx, ry, 0, Math.PI, TAU);
+        g.closePath();
+      }
+    }
+    g.fill();
+  };
+  humps('rgba(168, 214, 222, .5)', 0.03, 1100, [[260, 210, 96], [330, 120, 128], [760, 260, 70]]);
+  humps('rgba(136, 210, 194, .6)', 0.07, 900, [[120, 170, 44], [430, 240, 66], [720, 150, 36]]);
+}
+
+function drawClouds(g, near) {
+  for (const c of scene.clouds) {
+    if (c.near !== near) continue;
+    const spr = scene.cloudSprites[c.kind];
+    g.globalAlpha = near ? 0.96 : 0.72;
+    g.drawImage(spr.c, c.x, c.y + Math.sin(c.bob) * 3, spr.w * c.s, spr.h * c.s);
+  }
+  g.globalAlpha = 1;
+}
+
+function drawRain(g, speed) {
+  const n = Math.floor(scene.rain.length * scene.rainAmt);
+  if (n <= 0) return;
+  const wind = 90 + speed * 0.3;
+  g.strokeStyle = 'rgba(255, 255, 255, .6)';
+  g.lineWidth = 1.7;
+  g.lineCap = 'round';
+  g.beginPath();
+  for (let i = 0; i < n; i++) {
+    const d = scene.rain[i];
+    g.moveTo(d.x, d.y);
+    g.lineTo(d.x + (wind / d.v) * d.len, d.y - d.len);
+  }
+  g.stroke();
+}
+
+function drawWater(g, layer) {
+  const { W, H } = view;
+  g.beginPath();
+  g.moveTo(-20, H + 40);
+  for (let x = -20; x <= W + 30; x += 20) g.lineTo(x, waterY(layer, x));
+  g.lineTo(W + 30, H + 40);
+  g.closePath();
+  g.fillStyle = layer.fill || scene.frontWater;
+  g.fill();
+  if (layer !== WATER_FRONT) return;
+
+  // 물결 윗선
+  g.beginPath();
+  for (let x = -20; x <= W + 30; x += 20) {
+    const y = waterY(layer, x) + 1.5;
+    if (x === -20) g.moveTo(x, y); else g.lineTo(x, y);
+  }
+  g.strokeStyle = 'rgba(255, 255, 255, .6)';
+  g.lineWidth = 3;
+  g.lineJoin = 'round';
+  g.stroke();
+
+  // 떠다니는 거품 조각
+  const gap = 118;
+  const shift = scene.phase % gap;
+  g.fillStyle = 'rgba(255, 255, 255, .42)';
+  g.beginPath();
+  for (let x = -shift - gap; x < W + gap; x += gap) {
+    const idx = Math.round((x + scene.phase) / gap);
+    const jitter = ((idx * 73) % 50) - 25;
+    const fx = x + jitter;
+    const fy = waterY(layer, fx) + 16 + (Math.abs(idx) % 3) * 13;
+    const len = 12 + (Math.abs(idx * 7) % 12);
+    g.moveTo(fx, fy);
+    g.roundRect ? g.roundRect(fx - len / 2, fy - 2.2, len, 4.4, 2.2) : g.rect(fx - len / 2, fy - 2.2, len, 4.4);
+  }
+  g.fill();
+}
+
+/* ════════════════════════════════════════
+   6. 방주 그리기
+   ════════════════════════════════════════ */
+// 방주 중심 기준의 넉넉한 충돌 원(아이들이 억울하지 않도록 그림보다 작게 잡았습니다)
+const ARK_HITBOX = [
+  { x: -42, y: 13, r: 16 },
+  { x: 0, y: 17, r: 18 },
+  { x: 42, y: 10, r: 16 },
+  { x: -6, y: -24, r: 21 },
+];
+const ARK_PICKUP_PAD = 10;
+
+const HULL = [
+  ['M', -72, -8],
+  ['C', -68, 14, -54, 34, -30, 36],
+  ['L', 30, 36],
+  ['C', 54, 34, 70, 14, 78, -14],
+  ['C', 62, -6, 24, -3, -8, -3],
+  ['C', -38, -3, -58, -5, -72, -8],
+  ['Z'],
+];
+const ROOF = [
+  ['M', -56, -42],
+  ['Q', -60, -49, -51, -53],
+  ['L', -12, -71],
+  ['Q', -6, -74, 0, -71],
+  ['L', 42, -53],
+  ['Q', 50, -49, 46, -42],
+  ['Z'],
+];
+const DOOR = [['M', 12, -1], ['L', 12, -25], ['Q', 12, -33, 20, -33], ['Q', 28, -33, 28, -25], ['L', 28, -1], ['Z']];
+
+function drawGiraffe(g, t) {
+  g.save();
+  g.translate(-34, -48);
+  g.rotate(-0.14 + Math.sin(t * 1.7) * 0.07);
+  g.fillStyle = '#FFD36E';
+  g.beginPath();
+  g.roundRect ? g.roundRect(-4.5, -34, 9, 40, 4.5) : g.rect(-4.5, -34, 9, 40);
+  g.fill();
+  g.fillStyle = '#F2A33A';
+  g.beginPath();
+  circlePath(g, -0.8, -24, 2.2);
+  circlePath(g, 1.6, -15, 2);
+  circlePath(g, -1.2, -7, 2.2);
+  g.fill();
+  g.translate(0, -36);
+  g.strokeStyle = '#E09A36';
+  g.lineWidth = 2;
+  g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(-1, -5); g.lineTo(-2.5, -11);
+  g.moveTo(4, -5); g.lineTo(5, -11);
+  g.stroke();
+  g.fillStyle = '#E09A36';
+  g.beginPath();
+  circlePath(g, -2.5, -11.5, 2);
+  circlePath(g, 5, -11.5, 2);
+  g.fill();
+  g.fillStyle = '#FFD36E';
+  g.beginPath();
+  g.ellipse(7.5, -3, 4.2, 2.1, 0.5, 0, TAU);
+  g.fill();
+  g.beginPath();
+  g.ellipse(-2, 0, 9, 6.6, -0.25, 0, TAU);
+  g.fill();
+  g.fillStyle = '#FFE8AC';
+  g.beginPath();
+  g.ellipse(-8.5, 2.2, 4.8, 3.8, -0.2, 0, TAU);
+  g.fill();
+  g.fillStyle = '#3A281C';
+  g.beginPath();
+  circlePath(g, -1.5, -2, 1.5);
+  g.fill();
+  g.fillStyle = 'rgba(255, 128, 150, .5)';
+  g.beginPath();
+  circlePath(g, 1.8, 2, 1.9);
+  g.fill();
+  g.restore();
+}
+
+function drawArk(g, t) {
+  drawGiraffe(g, t);
+
+  // 선실
+  g.fillStyle = '#F1DCC0';
+  g.beginPath();
+  g.roundRect ? g.roundRect(-46, -46, 86, 46, 10) : g.rect(-46, -46, 86, 46);
+  g.fill();
+  g.fillStyle = 'rgba(190, 142, 98, .22)';
+  g.fillRect(30, -44, 9, 44);
+
+  // 창문 (창 6:16)
+  for (const wx of [-31, -9]) {
+    g.beginPath();
+    g.arc(wx, -24, 7.5, 0, TAU);
+    g.fillStyle = '#FFE7A0';
+    g.fill();
+    g.lineWidth = 2.5;
+    g.strokeStyle = '#B98C63';
+    g.stroke();
+    g.beginPath();
+    g.arc(wx - 2.2, -26.2, 2, 0, TAU);
+    g.fillStyle = 'rgba(255, 255, 255, .75)';
+    g.fill();
+  }
+
+  // 옆문
+  tracePath(g, DOOR);
+  g.fillStyle = '#B98A5E';
+  g.fill();
+  g.beginPath();
+  g.arc(24.5, -14, 1.7, 0, TAU);
+  g.fillStyle = '#FFE7A0';
+  g.fill();
+
+  // 지붕과 지붕 창
+  tracePath(g, ROOF);
+  g.fillStyle = '#8C6245';
+  g.fill();
+  g.beginPath();
+  g.moveTo(-50, -52);
+  g.lineTo(-12, -70);
+  g.quadraticCurveTo(-6, -73, 0, -70);
+  g.lineTo(40, -52);
+  g.strokeStyle = 'rgba(255, 226, 190, .35)';
+  g.lineWidth = 3;
+  g.lineCap = 'round';
+  g.lineJoin = 'round';
+  g.stroke();
+  g.beginPath();
+  g.arc(-6, -57, 4.5, 0, TAU);
+  g.fillStyle = '#FFE7A0';
+  g.fill();
+
+  // 선체
+  tracePath(g, HULL);
+  g.fillStyle = '#C49A6C';
+  g.fill();
+  g.save();
+  g.clip();
+  g.fillStyle = '#A97F58';
+  g.beginPath();
+  g.ellipse(0, 64, 104, 40, 0, 0, TAU);
+  g.fill();
+  g.strokeStyle = 'rgba(255, 234, 205, .45)';
+  g.lineWidth = 2.5;
+  g.beginPath();
+  g.moveTo(-82, 5); g.quadraticCurveTo(0, 17, 86, -2);
+  g.moveTo(-78, 18); g.quadraticCurveTo(0, 30, 82, 12);
+  g.stroke();
+  g.restore();
+  g.fillStyle = '#8E6647';
+  g.beginPath();
+  for (const [px, py] of [[-44, 9], [-18, 12], [8, 12], [34, 9]]) circlePath(g, px, py, 2.6);
+  g.fill();
+  g.beginPath();
+  g.moveTo(-70, -8);
+  g.bezierCurveTo(-58, -5, -38, -3, -8, -3);
+  g.bezierCurveTo(24, -3, 62, -6, 76, -13);
+  g.strokeStyle = '#E6C79F';
+  g.lineWidth = 4;
+  g.lineCap = 'round';
+  g.stroke();
+}
+
+function drawArkShadow(g, x, alt) {
+  const k = clamp(1 - alt / 420, 0.3, 1);
+  g.fillStyle = `rgba(20, 96, 120, ${0.2 * k})`;
+  g.beginPath();
+  g.ellipse(x + 4, view.seaY + 22, 72 * (0.6 + 0.4 * k), 6 * k + 2, 0, 0, TAU);
+  g.fill();
+}
+
+/* ════════════════════════════════════════
+   7. 아이템 그리기: 사자, 비둘기, 올리브 가지
+   ════════════════════════════════════════ */
+function drawLion(g, t) {
+  g.save();
+  g.rotate(Math.sin(t * 1.8) * 0.1);
+  g.fillStyle = '#FFAE1F';
+  g.beginPath();
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * TAU;
+    circlePath(g, Math.cos(a) * 17.5, Math.sin(a) * 17.5, 8.6);
+  }
+  circlePath(g, 0, 0, 19);
+  g.fill();
+  g.restore();
+
+  g.fillStyle = '#FFE03A';
+  g.beginPath();
+  circlePath(g, -11, -11.5, 5.6);
+  circlePath(g, 11, -11.5, 5.6);
+  g.fill();
+  g.fillStyle = '#FFBE3B';
+  g.beginPath();
+  circlePath(g, -11, -11.5, 2.8);
+  circlePath(g, 11, -11.5, 2.8);
+  g.fill();
+
+  g.fillStyle = '#FFE03A';
+  g.beginPath();
+  g.arc(0, 1.5, 14.5, 0, TAU);
+  g.fill();
+
+  g.fillStyle = '#FFF5C2';
+  g.beginPath();
+  g.moveTo(1.8, 7.2); g.ellipse(-3.6, 7.2, 5.4, 4.4, 0, 0, TAU);
+  g.moveTo(9, 7.2); g.ellipse(3.6, 7.2, 5.4, 4.4, 0, 0, TAU);
+  g.fill();
+
+  g.fillStyle = '#8A5634';
+  g.beginPath();
+  g.moveTo(-3.4, 3.4);
+  g.quadraticCurveTo(0, 2, 3.4, 3.4);
+  g.quadraticCurveTo(1, 7, 0, 7);
+  g.quadraticCurveTo(-1, 7, -3.4, 3.4);
+  g.fill();
+
+  g.fillStyle = '#3A281C';
+  g.beginPath();
+  circlePath(g, -5.6, -2, 2.2);
+  circlePath(g, 5.6, -2, 2.2);
+  g.fill();
+  g.fillStyle = '#FFFFFF';
+  g.beginPath();
+  circlePath(g, -4.9, -2.8, 0.8);
+  circlePath(g, 6.3, -2.8, 0.8);
+  g.fill();
+
+  g.fillStyle = 'rgba(255, 120, 150, .45)';
+  g.beginPath();
+  g.moveTo(-7, 4.6); g.ellipse(-10, 4.6, 3, 2, 0, 0, TAU);
+  g.moveTo(13, 4.6); g.ellipse(10, 4.6, 3, 2, 0, 0, TAU);
+  g.fill();
+
+  g.strokeStyle = '#8A5634';
+  g.lineWidth = 1.3;
+  g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(-2.6, 9.4);
+  g.quadraticCurveTo(0, 11.6, 2.6, 9.4);
+  g.stroke();
+}
+
+function doveWing(g, color) {
+  g.fillStyle = color;
+  g.beginPath();
+  g.moveTo(-6, 0);
+  g.quadraticCurveTo(0, -20, 18, -18);
+  g.quadraticCurveTo(14, -6, 10, 2);
+  g.quadraticCurveTo(2, 5, -6, 0);
+  g.closePath();
+  g.fill();
+}
+
+function drawDove(g, t) {
+  const flap = Math.sin(t * 10);
+
+  g.save();
+  g.translate(1, -3);
+  g.rotate(-0.55 - flap * 0.35);
+  doveWing(g, '#F07A22');
+  g.restore();
+
+  g.fillStyle = '#FF8526';
+  g.beginPath();
+  g.moveTo(10, 0);
+  g.quadraticCurveTo(22, -8, 28, -4);
+  g.quadraticCurveTo(26, 2, 29, 7);
+  g.quadraticCurveTo(20, 9, 10, 6);
+  g.closePath();
+  g.fill();
+
+  g.fillStyle = '#FF9A3D';
+  g.beginPath();
+  g.ellipse(2, 2, 16.5, 11.5, -0.08, 0, TAU);
+  g.fill();
+  g.fillStyle = '#FFC47F';
+  g.beginPath();
+  g.ellipse(-2, 7, 10.5, 5.4, -0.05, 0, TAU);
+  g.fill();
+
+  g.fillStyle = '#FF9A3D';
+  g.beginPath();
+  g.arc(-12, -6, 8.6, 0, TAU);
+  g.fill();
+
+  g.fillStyle = '#FFD25E';
+  g.beginPath();
+  g.moveTo(-19.5, -8.2);
+  g.quadraticCurveTo(-26, -6.8, -27.5, -4.6);
+  g.quadraticCurveTo(-24, -3, -19.5, -3.4);
+  g.closePath();
+  g.fill();
+
+  // 부리에 문 올리브 잎 (창 8:11)
+  g.save();
+  g.translate(-26, -3);
+  g.rotate(0.55);
+  g.fillStyle = '#86E84F';
+  g.beginPath();
+  g.ellipse(0, 4, 2.4, 5.2, 0, 0, TAU);
+  g.fill();
+  g.restore();
+
+  g.fillStyle = '#3A281C';
+  g.beginPath();
+  g.arc(-13.5, -7.5, 1.9, 0, TAU);
+  g.fill();
+  g.fillStyle = '#FFFFFF';
+  g.beginPath();
+  g.arc(-13, -8.2, 0.7, 0, TAU);
+  g.fill();
+  g.fillStyle = 'rgba(255, 110, 120, .4)';
+  g.beginPath();
+  g.ellipse(-9, -3, 2.6, 1.8, 0, 0, TAU);
+  g.fill();
+
+  g.save();
+  g.translate(3, -1);
+  g.rotate(-0.35 + flap * 0.5);
+  doveWing(g, '#FFB560');
+  g.strokeStyle = 'rgba(240, 120, 34, .75)';
+  g.lineWidth = 1.4;
+  g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(2, -4); g.lineTo(10, -12);
+  g.moveTo(6, -1); g.lineTo(13, -7);
+  g.stroke();
+  g.restore();
+}
+
+const OLIVE_LEAVES = [[-15, 10.5, -1.2], [-10, 8.6, 0.35], [-3, 5.2, -1.15], [3, 2.6, 0.3], [9, -0.8, -1.1], [14, -3.8, 0.3], [21, -9, -0.46]];
+
+function drawOlive(g, t) {
+  g.save();
+  g.rotate(-0.15 + Math.sin(t * 2.1) * 0.12);
+  g.strokeStyle = '#8C6A3C';
+  g.lineWidth = 3.2;
+  g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(-22, 12);
+  g.quadraticCurveTo(-2, 4, 22, -10);
+  g.stroke();
+  for (const [x, y, a] of OLIVE_LEAVES) {
+    g.save();
+    g.translate(x, y);
+    g.rotate(a);
+    g.fillStyle = '#A8F54A';
+    g.beginPath();
+    g.ellipse(8.5, 0, 9, 3.7, 0, 0, TAU);
+    g.fill();
+    g.strokeStyle = 'rgba(78, 150, 36, .6)';
+    g.lineWidth = 1;
+    g.beginPath();
+    g.moveTo(1.5, 0);
+    g.lineTo(15.5, 0);
+    g.stroke();
+    g.restore();
+  }
+  g.fillStyle = '#5E9A2E';
+  g.beginPath();
+  g.moveTo(-2.4, 11.5); g.ellipse(-6, 11.5, 3.6, 4.4, 0.3, 0, TAU);
+  g.moveTo(9.4, 6.5); g.ellipse(6, 6.5, 3.4, 4.2, 0.3, 0, TAU);
+  g.fill();
+  g.fillStyle = 'rgba(255, 255, 255, .6)';
+  g.beginPath();
+  circlePath(g, -7, 10, 1.1);
+  circlePath(g, 5, 5, 1);
+  g.fill();
+  g.restore();
+}
+
+const ITEM_DRAW = { lion: drawLion, dove: drawDove, olive: drawOlive };
+
+function haloSprite(type) {
+  const key = 'halo-' + type;
+  let s = spriteCache.get(key);
+  if (s) return s;
+  const size = 110;
+  const L = makeLayer(size, size);
+  const grad = L.g.createRadialGradient(size / 2, size / 2, 4, size / 2, size / 2, size / 2);
+  const glow = ITEM_TYPES[type].glow;
+  grad.addColorStop(0, glow.replace(/[\d.]+\)$/, '.6)'));
+  grad.addColorStop(0.45, glow.replace(/[\d.]+\)$/, '.22)'));
+  grad.addColorStop(1, glow.replace(/[\d.]+\)$/, '0)'));
+  L.g.fillStyle = grad;
+  L.g.fillRect(0, 0, size, size);
+  s = { c: L.c, size };
+  spriteCache.set(key, s);
+  return s;
+}
+
+/* ════════════════════════════════════════
+   8. 파도 장애물
+   ════════════════════════════════════════ */
+// 아래에서 솟는 파도(swell, twin, curl, surge)는 바다 수면이 원점이고 위쪽이 음수입니다.
+// 하늘에서 쏟아지는 물기둥(pour)은 화면 맨 위가 원점입니다(창 7:11 "하늘의 창문들이 열려").
+const WAVE_DEPTH = 70;
+let waveSeq = 1;
+
+function profilePath(pts, depth) {
+  const cmds = [['M', pts[0][0], depth], ['L', pts[0][0], pts[0][1]]];
+  for (let i = 1; i < pts.length - 1; i++) {
+    const mx = (pts[i][0] + pts[i + 1][0]) / 2;
+    const my = (pts[i][1] + pts[i + 1][1]) / 2;
+    cmds.push(['Q', pts[i][0], pts[i][1], mx, my]);
+  }
+  const last = pts[pts.length - 1];
+  cmds.push(['L', last[0], last[1]], ['L', last[0], depth], ['Z']);
+  return cmds;
+}
+
+function profilePoints(w, fn, n = 26) {
+  const pts = [];
+  for (let i = 0; i <= n; i++) {
+    const s = i / n;
+    pts.push([s * w, -fn(s)]);
+  }
+  return pts;
+}
+
+// 앞(왼쪽) 면이 더 가파른 물마루. 파도가 방주 쪽으로 밀려오는 느낌을 줍니다.
+function asymBump(s, c, left, right) {
+  const d = s - c;
+  const k = d < 0 ? -d / left : d / right;
+  return k >= 1 ? 0 : Math.pow(Math.cos((k * Math.PI) / 2), 1.35);
+}
+
+// 물마루 앞면을 따라 흘러내리는 거품. 꼭대기에 가까울수록 큽니다.
+function foamAlong(pts, from, to, peakH) {
+  const out = [];
+  for (let i = 0; i < pts.length; i++) {
+    const s = i / (pts.length - 1);
+    if (s < from || s > to) continue;
+    const k = clamp(-pts[i][1] / peakH, 0, 1);
+    out.push([pts[i][0], pts[i][1] + 3, 3 + 6 * k]);
+  }
+  return out;
+}
+
+// 모양 정의(spec)만으로 파도 전체를 다시 만들 수 있게 합니다.
+function buildWave(spec) {
+  const o = { ...spec, id: waveSeq++, shapes: [], foam: [], highlight: null };
+  const depth = WAVE_DEPTH + (spec.type === 'surge' ? spec.h * 0.7 : 0);
+  if (spec.type === 'swell' || spec.type === 'surge') {
+    const pts = profilePoints(spec.w, (s) => spec.h * asymBump(s, 0.4, 0.4, 0.6));
+    o.shapes.push({ cmds: profilePath(pts, depth) });
+    o.profile = pts;
+    o.crests = [[spec.w * 0.4, -spec.h]];
+    o.foam = foamAlong(pts, 0.2, 0.42, spec.h);
+    o.highlight = pts.slice(13, 20).map(([x, y]) => [x, y + 12]);
+  } else if (spec.type === 'twin') {
+    const pts = profilePoints(spec.w, (s) => Math.max(spec.h * asymBump(s, 0.28, 0.28, 0.3), spec.h2 * asymBump(s, 0.7, 0.24, 0.3)), 30);
+    o.shapes.push({ cmds: profilePath(pts, depth) });
+    o.profile = pts;
+    o.crests = [[spec.w * 0.28, -spec.h], [spec.w * 0.7, -spec.h2]];
+    o.foam = foamAlong(pts, 0.12, 0.3, spec.h).concat(foamAlong(pts, 0.52, 0.72, spec.h2));
+    o.highlight = pts.slice(10, 15).map(([x, y]) => [x, y + 11]);
+  } else if (spec.type === 'curl') {
+    const { w, h } = spec;
+    const X = (s) => s * w, Y = (v) => -v * h;
+    const body = [
+      ['M', 0, depth], ['L', 0, 0],
+      ['C', X(0.16), Y(0.02), X(0.30), Y(0.30), X(0.34), Y(0.62)],
+      ['C', X(0.36), Y(0.80), X(0.38), Y(0.95), X(0.46), Y(1.0)],
+      ['C', X(0.60), Y(1.03), X(0.72), Y(0.55), X(0.86), Y(0.22)],
+      ['C', X(0.92), Y(0.08), X(0.96), Y(0.02), X(1), 0],
+      ['L', X(1), depth], ['Z'],
+    ];
+    const lip = [
+      ['M', X(0.46), Y(1.0)],
+      ['C', X(0.30), Y(1.07), X(0.14), Y(0.98), X(0.11), Y(0.78)],
+      ['C', X(0.10), Y(0.64), X(0.19), Y(0.57), X(0.25), Y(0.64)],
+      ['C', X(0.21), Y(0.70), X(0.24), Y(0.81), X(0.33), Y(0.84)],
+      ['C', X(0.37), Y(0.85), X(0.39), Y(0.80), X(0.40), Y(0.74)],
+      ['L', X(0.44), Y(0.86)],
+      ['Z'],
+    ];
+    o.shapes.push({ cmds: body }, { cmds: lip });
+    o.pocket = [X(0.285), Y(0.72), w * 0.06, h * 0.09];
+    const rim = samplePath([['M', X(0.46), Y(1.0)], ['C', X(0.30), Y(1.07), X(0.14), Y(0.98), X(0.11), Y(0.78)]], 8);
+    o.foam = rim.map(([x, y], i) => [x, y + 3, 5 + (i % 3) * 1.6]);
+    o.highlight = samplePath([['M', X(0.62), Y(0.84)], ['C', X(0.70), Y(0.62), X(0.78), Y(0.44), X(0.86), Y(0.3)]], 6);
+  } else if (spec.type === 'pour') {
+    const hw = spec.hw;
+    const tipY = view.seaY - spec.alt;
+    o.tipY = tipY;
+    const top = -70;
+    const bulbY = tipY - hw * 0.9;
+    const cmds = [['M', -hw, top]];
+    for (let y = top + 24; y < bulbY; y += 24) cmds.push(['L', -hw + Math.sin(y * 0.045 + spec.ph) * 3.5, y]);
+    cmds.push(['L', -hw, bulbY]);
+    cmds.push(['C', -hw, bulbY + hw * 1.2, hw, bulbY + hw * 1.2, hw, bulbY]);
+    for (let y = bulbY - 24; y > top; y -= 24) cmds.push(['L', hw + Math.sin(y * 0.045 + spec.ph + 1.3) * 3.5, y]);
+    cmds.push(['L', hw, top], ['Z']);
+    o.shapes.push({ cmds });
+    o.foam = [];
+    for (let i = 0; i <= 6; i++) {
+      const a = Math.PI * (0.12 + (i / 6) * 0.76);
+      o.foam.push([Math.cos(a) * hw * 0.92, bulbY + Math.sin(a) * hw * 0.88, 5 + (i % 3) * 1.5]);
+    }
+    o.highlight = [[-hw * 0.5, top + 90], [-hw * 0.52, bulbY - 20]];
+  }
+
+  for (const sh of o.shapes) sh.poly = makePoly(samplePath(sh.cmds, 10));
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const sh of o.shapes) {
+    x0 = Math.min(x0, sh.poly.x0); y0 = Math.min(y0, sh.poly.y0);
+    x1 = Math.max(x1, sh.poly.x1); y1 = Math.max(y1, sh.poly.y1);
+  }
+  o.bounds = { x0, y0, x1, y1, w: x1 - x0, h: y1 - y0 };
+  o.t = spec.t || 0;
+  return o;
+}
+
+function isPour(o) { return o.type === 'pour'; }
+
+// 파도의 현재 세계 좌표 원점
+function waveOrigin(o) {
+  if (isPour(o)) return [o.x, 0];
+  return [o.x, view.seaY + surgeOffset(o)];
+}
+
+function surgeOffset(o) {
+  if (o.type !== 'surge') return 0;
+  const m = lerp(0.36, 1, 0.5 + 0.5 * Math.sin(o.t * o.speed + o.ph));
+  return (1 - m) * o.h;
+}
+
+function waveRight(o) { return o.x + o.bounds.x1; }
+
+function waveSprite(o) {
+  const key = 'w' + o.id;
+  let s = spriteCache.get(key);
+  if (s) return s;
+  const pad = 40;
+  const b = o.bounds;
+  const L = makeLayer(b.w + pad * 2, b.h + pad * 2);
+  const g = L.g;
+  g.translate(pad - b.x0, pad - b.y0);
+  paintWave(g, o);
+  s = { c: L.c, x: b.x0 - pad, y: b.y0 - pad, w: b.w + pad * 2, h: b.h + pad * 2 };
+  spriteCache.set(key, s);
+  return s;
+}
+
+function paintWave(g, o) {
+  const b = o.bounds;
+  const pour = isPour(o);
+  const top = pour ? b.y0 : -(o.h2 ? Math.max(o.h, o.h2) : o.h) * 1.07;
+  const bottom = pour ? b.y1 : 0;
+  const grad = g.createLinearGradient(0, top, 0, bottom);
+  if (pour) {
+    grad.addColorStop(0, '#A45CFF');
+    grad.addColorStop(0.55, '#6A7CFF');
+    grad.addColorStop(1, '#4FD8FF');
+  } else {
+    grad.addColorStop(0, '#52DCFF');
+    grad.addColorStop(0.42, '#5E8BFF');
+    grad.addColorStop(0.85, '#9D5CFF');
+    grad.addColorStop(1, '#A85BFF');
+  }
+
+  // 네온 빛번짐
+  g.save();
+  g.shadowColor = WAVE_GLOW;
+  g.shadowBlur = 26 * view.ppu;
+  g.fillStyle = grad;
+  for (const sh of o.shapes) { tracePath(g, sh.cmds); g.fill(); }
+  g.restore();
+
+  for (const sh of o.shapes) {
+    g.save();
+    tracePath(g, sh.cmds);
+    g.clip();
+    // 파랑과 보라가 옆으로도 섞이도록 겹쳐 칠합니다
+    const sheen = g.createLinearGradient(b.x0, 0, b.x1, 0);
+    sheen.addColorStop(0, 'rgba(80, 225, 255, .30)');
+    sheen.addColorStop(0.5, 'rgba(110, 130, 255, 0)');
+    sheen.addColorStop(1, 'rgba(176, 92, 255, .34)');
+    g.fillStyle = sheen;
+    g.fillRect(b.x0, b.y0, b.w, b.h);
+    // 로파이 일러스트처럼 윤곽을 따라 겹겹이 흐르는 물결 띠
+    if (pour) {
+      g.fillStyle = 'rgba(255, 255, 255, .10)';
+      g.fillRect(-o.hw * 0.55, b.y0, o.hw * 0.35, b.h);
+    } else if (o.profile) {
+      g.strokeStyle = 'rgba(255, 255, 255, .16)';
+      g.lineWidth = 9;
+      g.lineJoin = 'round';
+      for (const off of [24, 50, 78]) {
+        g.beginPath();
+        o.profile.forEach(([x, y], i) => (i ? g.lineTo(x, y + off) : g.moveTo(x, y + off)));
+        g.stroke();
+      }
+    } else {
+      g.fillStyle = 'rgba(255, 255, 255, .10)';
+      g.beginPath();
+      g.ellipse(b.x0 + b.w * 0.42, -o.h * 0.25, b.w * 0.34, o.h * 0.22, -0.2, 0, TAU);
+      g.fill();
+    }
+    g.fillStyle = 'rgba(255, 255, 255, .22)';
+    g.beginPath();
+    for (let i = 0; i < 9; i++) {
+      const bx = b.x0 + b.w * (0.15 + ((i * 0.37) % 0.7));
+      const by = pour ? b.y0 + b.h * (0.3 + ((i * 0.29) % 0.65)) : -o.h * (0.12 + ((i * 0.23) % 0.6));
+      circlePath(g, bx, by, 2 + (i % 3));
+    }
+    g.fill();
+    g.restore();
+  }
+
+  if (o.pocket) {
+    const [px, py, rx, ry] = o.pocket;
+    g.fillStyle = 'rgba(76, 40, 190, .55)';
+    g.beginPath();
+    g.ellipse(px, py, rx, ry, 0.25, 0, TAU);
+    g.fill();
+  }
+
+  if (o.highlight) {
+    g.strokeStyle = 'rgba(255, 255, 255, .6)';
+    g.lineWidth = 5;
+    g.lineCap = 'round';
+    g.lineJoin = 'round';
+    g.beginPath();
+    o.highlight.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+    g.stroke();
+  }
+
+  // 물마루 끝이 앞으로 동그랗게 말린 거품
+  if (o.crests) {
+    for (const [cx, cy] of o.crests) {
+      g.fillStyle = '#FFFFFF';
+      g.beginPath();
+      g.arc(cx - 7, cy + 10, 12.5, 0, TAU);
+      g.fill();
+      g.fillStyle = '#5A9BFF';
+      g.beginPath();
+      g.arc(cx - 3, cy + 13, 6.2, 0, TAU);
+      g.fill();
+      g.fillStyle = 'rgba(255, 255, 255, .85)';
+      g.beginPath();
+      g.arc(cx + 9, cy + 4, 6, 0, TAU);
+      g.fill();
+    }
+  }
+}
+
+function drawWave(g, o, clock) {
+  const s = waveSprite(o);
+  const [ox, oy] = waveOrigin(o);
+  g.drawImage(s.c, ox + s.x, oy + s.y, s.w, s.h);
+
+  // 살아 움직이는 물거품
+  g.fillStyle = '#E6E1FF';
+  g.beginPath();
+  o.foam.forEach(([fx, fy, r], i) => circlePath(g, ox + fx, oy + fy + 2.5 + Math.sin(clock * 3 + i) * 1.4, r));
+  g.fill();
+  g.fillStyle = '#FFFFFF';
+  g.beginPath();
+  o.foam.forEach(([fx, fy, r], i) => circlePath(g, ox + fx, oy + fy + Math.sin(clock * 3 + i) * 1.4, r * 0.86));
+  g.fill();
+
+  if (isPour(o)) {
+    // 흘러내리는 물줄기
+    g.save();
+    g.translate(ox, oy);
+    tracePath(g, o.shapes[0].cmds);
+    g.clip();
+    g.strokeStyle = 'rgba(255, 255, 255, .35)';
+    g.lineWidth = 4;
+    g.lineCap = 'round';
+    g.setLineDash([26, 38]);
+    g.lineDashOffset = -clock * 260;
+    g.beginPath();
+    g.moveTo(-o.hw * 0.25, -70); g.lineTo(-o.hw * 0.25, o.tipY);
+    g.moveTo(o.hw * 0.3, -40); g.lineTo(o.hw * 0.3, o.tipY);
+    g.stroke();
+    g.setLineDash([]);
+    g.restore();
+    // 물기둥이 시작되는 먹구름
+    const st = scene.stormSprite;
+    const cw = o.hw * 2 + 150;
+    g.drawImage(st.c, ox - cw / 2, -st.h * (cw / st.w) * 0.5 + Math.sin(clock * 1.2 + o.ph) * 2, cw, st.h * (cw / st.w));
+  }
+}
+
+// 방주 충돌 원들과 파도의 겹침 검사. 부딪힌 지점을 돌려줍니다.
+function waveHit(o, circles) {
+  const [ox, oy] = waveOrigin(o);
+  for (const c of circles) {
+    const lx = c.x - ox, ly = c.y - oy;
+    if (lx + c.r < o.bounds.x0 || lx - c.r > o.bounds.x1) continue;
+    for (const sh of o.shapes) {
+      if (circleHitsPoly(lx, ly, c.r, sh.poly)) return c;
+    }
+  }
+  return null;
+}
+
+// 아이템을 놓을 자리가 파도와 겹치는지 검사
+// 오르내리는 파도는 가장 높이 솟은 모습으로 검사합니다.
+function spotBlocked(x, y, r) {
+  for (const o of game.waves) {
+    const lx = x - o.x;
+    const ly = y - (isPour(o) ? 0 : view.seaY);
+    if (lx + r < o.bounds.x0 || lx - r > o.bounds.x1) continue;
+    for (const sh of o.shapes) {
+      if (circleHitsPoly(lx, ly, r, sh.poly)) return true;
+    }
+  }
+  return false;
+}
+
+function specOf(o) {
+  const { type, x, w, h, h2, hw, alt, ph, speed, t } = o;
+  return { type, x, w, h, h2, hw, alt, ph, speed, t };
+}
+
+function waveIcon(g, size) {
+  // 안내 칩에 쓰는 작은 파도 아이콘
+  const s = size / 60;
+  g.save();
+  g.scale(s, s);
+  g.translate(5, 46);
+  const pts = profilePoints(50, (u) => 30 * asymBump(u, 0.4, 0.4, 0.6), 18);
+  const grad = g.createLinearGradient(0, -30, 0, 0);
+  grad.addColorStop(0, '#52DCFF');
+  grad.addColorStop(0.5, '#5E8BFF');
+  grad.addColorStop(1, '#A85BFF');
+  tracePath(g, profilePath(pts, 2));
+  g.fillStyle = grad;
+  g.fill();
+  g.fillStyle = '#FFFFFF';
+  g.beginPath();
+  g.arc(14, -21, 8, 0, TAU);
+  g.fill();
+  g.fillStyle = '#5A9BFF';
+  g.beginPath();
+  g.arc(16.5, -19, 4, 0, TAU);
+  g.fill();
+  g.fillStyle = '#FFFFFF';
+  g.beginPath();
+  circlePath(g, 25, -27, 3.6);
+  circlePath(g, 9, -12, 2.6);
+  g.fill();
+  g.restore();
+}
+
+/* ════════════════════════════════════════
+   9. 게임 상태와 난이도
+   ════════════════════════════════════════ */
+const game = {
+  state: 'title',          // title | playing | paused | crash | over
+  time: 0,
+  distance: 0,
+  bonus: 0,
+  score: 0,
+  finalScore: 0,
+  best: parseInt(store.get('best'), 10) || 0,
+  prevBest: 0,
+  isNewBest: false,
+  speed: 60,
+  diff: 0,
+  counts: { lion: 0, dove: 0, olive: 0 },
+  ark: { y: 0, vy: 0, boost: 0, jumpT: 9, lean: 0, angle: 0, squash: 0, kick: 0, onWater: true, wobble: 0 },
+  waves: [],
+  items: [],
+  particles: [],
+  floaters: [],
+  spawnIn: 1.5,
+  itemIn: 0.75,
+  lastWave: null,
+  crashT: 0,
+  lockUntil: 0,
+  milestone: 0,
+  bestToast: false,
+  wakeT: 0,
+};
+
+const MILESTONES = [
+  { t: 18, text: '파도가 조금씩 빨라져요!' },
+  { t: 46, text: '비가 그쳤어요. 조금만 더 힘내요!' },
+  { t: 64, text: '무지개가 떴어요! 하나님의 약속이에요' },
+  { t: 110, text: '물결이 더 거세져요. 집중!' },
+];
+
+// 시간이 지날수록 0에서 1로 부드럽게 올라갑니다(60초 ≈ 0.5, 120초 ≈ 0.75).
+const difficulty = (t) => 1 - Math.exp(-t / 85);
+const runSpeed = (d) => 285 + 265 * d;
+const waveInterval = (d) => (1.85 - 0.85 * d) * rand(0.88, 1.18);
+const arkRestY = () => view.seaY - 18 + Math.sin(scene.clock * 2.1) * 2.5;
+
+function resetArk() {
+  Object.assign(game.ark, { y: arkRestY(), vy: 0, boost: 0, jumpT: 9, lean: 0, angle: 0, squash: 0, kick: 0, onWater: true, wobble: 0 });
+}
+
+/* ════════════════════════════════════════
+   10. 파도와 아이템 등장
+   ════════════════════════════════════════ */
+function spawnWaves() {
+  const d = game.diff;
+  const x = view.W + 70;
+  let type = pickWeighted({
+    swell: 1,
+    twin: 0.45 + 0.3 * d,
+    pour: 0.55,
+    curl: d > 0.1 ? 0.75 : 0,
+    gate: d > 0.16 ? 0.35 + 0.9 * d : 0,
+    surge: d > 0.28 ? 0.6 : 0,
+  });
+  const prev = game.lastWave;
+  if (prev && prev.type === type && prev.repeat >= 1) type = type === 'swell' ? 'pour' : 'swell';
+  // 위를 막는 물기둥 바로 뒤에는 너무 높은 파도를 내지 않습니다.
+  const afterCeiling = prev && (prev.type === 'pour' || prev.type === 'gate');
+  const hMax = lerp(215, 335, d) * (afterCeiling ? 0.82 : 1);
+  const made = [];
+
+  switch (type) {
+    case 'swell':
+      made.push(buildWave({ type, x, w: rand(180, 250), h: rand(105, hMax), ph: 0 }));
+      break;
+    case 'surge':
+      made.push(buildWave({ type, x, w: rand(190, 240), h: rand(200, Math.max(220, hMax)), ph: rand(0, TAU), speed: rand(2.4, 3.4) }));
+      break;
+    case 'twin': {
+      const h = rand(100, hMax * 0.9);
+      made.push(buildWave({ type, x, w: rand(270, 340), h, h2: clamp(h + rand(-70, 70), 90, hMax), ph: 0 }));
+      break;
+    }
+    case 'curl':
+      made.push(buildWave({ type, x, w: rand(200, 250), h: rand(lerp(190, 240, d), Math.max(250, hMax)), ph: 0 }));
+      break;
+    case 'pour': {
+      const hw = rand(42, 56);
+      made.push(buildWave({ type, x: x + hw, hw, alt: rand(150, Math.min(340, view.seaY - 140)), ph: rand(0, TAU) }));
+      break;
+    }
+    case 'gate': {
+      const kind = chance(0.35 + 0.3 * d) ? 'curl' : 'swell';
+      const w = rand(195, 240);
+      const h = rand(90, lerp(200, 250, d));
+      const crest = h * (kind === 'curl' ? 1.07 : 1);
+      const gap = lerp(262, 212, d) * rand(0.97, 1.06);
+      const crestX = x + w * (kind === 'curl' ? 0.42 : 0.5);
+      const alt = Math.min(crest + gap, view.seaY - 110);
+      made.push(buildWave({ type: kind, x, w, h, ph: 0 }));
+      made.push(buildWave({ type: 'pour', x: crestX, hw: rand(44, 56), alt, ph: rand(0, TAU) }));
+      if (chance(0.6)) spawnItem(crestX, crest + (alt - crest) / 2, true);
+      break;
+    }
+  }
+  game.waves.push(...made);
+  game.lastWave = { type, repeat: prev && prev.type === type ? prev.repeat + 1 : 0 };
+}
+
+function spawnItem(x, alt, force) {
+  const type = pickWeighted({ lion: 1, dove: 1, olive: 0.9 });
+  if (alt == null) {
+    const top = Math.min(400, view.seaY - 150);
+    for (let i = 0; i < 10 && alt == null; i++) {
+      const a = rand(46, top);
+      if (!spotBlocked(x, view.seaY - a, 42)) alt = a;
+    }
+    if (alt == null) return false;
+  } else if (!force && spotBlocked(x, view.seaY - alt, 42)) {
+    return false;
+  }
+  game.items.push({ type, x, alt, phase: rand(0, TAU), t: 0 });
+  return true;
+}
+
+const itemY = (it) => view.seaY - it.alt + Math.sin(it.t * 2.4 + it.phase) * (it.type === 'dove' ? 11 : 7);
+
+/* ════════════════════════════════════════
+   11. 움직임: 방주 물리, 세계 이동, 충돌
+   ════════════════════════════════════════ */
+function jump() {
+  const a = game.ark;
+  a.boost = PHYS.boostTime;
+  a.jumpT = 0;
+  if (a.onWater) splashAt(view.arkX - 8, view.seaY + 4, 7);
+  audio.jump();
+}
+
+function stepArk(h) {
+  const a = game.ark;
+  const restY = arkRestY();
+  if (a.boost > 0) {
+    // 점프 힘을 0.1초에 걸쳐 실어 관성이 느껴지게 합니다.
+    a.vy += (PHYS.jumpV - a.vy) * (1 - Math.exp(-h * PHYS.boostRate));
+    a.boost -= h;
+  } else if (a.y < restY) {
+    a.vy = Math.min(a.vy + PHYS.gravity * h, PHYS.maxFall);
+  } else {
+    a.vy += (-(a.y - restY) * PHYS.floatK - a.vy * PHYS.floatC) * h;
+  }
+  a.y += a.vy * h;
+
+  const inWater = a.y >= restY - 2;
+  if (inWater && !a.onWater && a.vy > 150) {
+    a.squash = clamp(a.vy / 600, 0.35, 1);
+    splashAt(view.arkX, view.seaY + 4, 10);
+    audio.splash();
+  }
+  a.onWater = inWater;
+
+  if (a.y < PHYS.ceiling) {
+    a.y = PHYS.ceiling;
+    if (a.vy < 0) a.vy = 30;
+    a.boost = 0;
+  }
+  if (a.y > restY + 28) {
+    a.y = restY + 28;
+    if (a.vy > 0) a.vy = 0;
+  }
+}
+
+function stepArkFor(dt) {
+  const steps = Math.max(1, Math.ceil(dt * 120));
+  for (let i = 0; i < steps; i++) stepArk(dt / steps);
+}
+
+function updateArkVisual(dt) {
+  const a = game.ark;
+  a.jumpT += dt;
+  const leanTarget = clamp(a.vy / 1500, -0.1, 0.16);
+  a.lean += (leanTarget - a.lean) * (1 - Math.exp(-dt * 10));
+  // 점프 순간 0.1초 동안 뱃머리가 살짝 들렸다가 부드럽게 돌아옵니다.
+  a.kick = a.jumpT < PHYS.boostTime
+    ? easeOutCubic(a.jumpT / PHYS.boostTime)
+    : Math.exp(-(a.jumpT - PHYS.boostTime) / 0.16);
+  const rock = a.onWater ? Math.sin(scene.clock * 1.7) * 0.035 : 0;
+  a.squash *= Math.exp(-dt * 8);
+  a.wobble *= Math.exp(-dt * 2.2);
+  a.angle = a.lean - 0.15 * a.kick + rock + Math.sin(scene.clock * 16) * 0.2 * a.wobble;
+}
+
+function arkCircles() {
+  const a = game.ark;
+  const c = Math.cos(a.angle), s = Math.sin(a.angle);
+  return ARK_HITBOX.map((hb) => ({ x: view.arkX + hb.x * c - hb.y * s, y: a.y + hb.x * s + hb.y * c, r: hb.r }));
+}
+
+function moveWorld(dt, speed) {
+  for (let i = game.waves.length - 1; i >= 0; i--) {
+    const o = game.waves[i];
+    o.x -= speed * dt;
+    o.t += dt;
+    if (isPour(o) && game.state === 'playing') {
+      o.dripT = (o.dripT || 0) - dt;
+      if (o.dripT <= 0) {
+        o.dripT = rand(0.1, 0.26);
+        game.particles.push({ kind: 'drop', x: o.x + rand(-o.hw * 0.5, o.hw * 0.5), y: o.tipY - 4, vx: 0, vy: rand(60, 160), t: 0, life: 0.8, size: rand(2.4, 4.2), color: '#A8E9FF', world: true });
+      }
+    }
+    if (waveRight(o) < -80) {
+      spriteCache.delete('w' + o.id);
+      game.waves.splice(i, 1);
+    }
+  }
+  for (let i = game.items.length - 1; i >= 0; i--) {
+    const it = game.items[i];
+    it.x -= speed * dt;
+    it.t += dt;
+    if (it.x < -80) game.items.splice(i, 1);
+  }
+}
+
+function collectItems() {
+  const circles = arkCircles();
+  for (let i = game.items.length - 1; i >= 0; i--) {
+    const it = game.items[i];
+    const iy = itemY(it);
+    for (const c of circles) {
+      const dx = it.x - c.x, dy = iy - c.y, rr = c.r + 24 + ARK_PICKUP_PAD;
+      if (dx * dx + dy * dy < rr * rr) {
+        game.items.splice(i, 1);
+        game.bonus += ITEM_POINTS;
+        game.counts[it.type]++;
+        burstSparkles(it.x, iy, it.type);
+        audio.pickup();
+        onCollect(it.type);
+        break;
+      }
+    }
+  }
+}
+
+function updatePlaying(dt) {
+  game.time += dt;
+  game.diff = difficulty(game.time);
+  game.speed = runSpeed(game.diff);
+  game.distance += game.speed * dt;
+
+  game.spawnIn -= dt;
+  if (game.spawnIn <= 0) {
+    const gap = waveInterval(game.diff);
+    spawnWaves();
+    game.spawnIn += gap;
+    game.itemIn = gap * rand(0.42, 0.58);
+  }
+  if (game.itemIn > 0) {
+    game.itemIn -= dt;
+    if (game.itemIn <= 0 && chance(0.74)) spawnItem(view.W + 60);
+  }
+
+  moveWorld(dt, game.speed);
+
+  const steps = Math.max(1, Math.ceil(dt * 120));
+  for (let i = 0; i < steps; i++) {
+    stepArk(dt / steps);
+    const circles = arkCircles();
+    for (const o of game.waves) {
+      const hit = waveHit(o, circles);
+      if (hit) { crash(hit); return; }
+    }
+  }
+  collectItems();
+
+  // 물 위를 달릴 때 생기는 하얀 물보라
+  if (game.ark.onWater) {
+    game.wakeT -= dt;
+    if (game.wakeT <= 0) {
+      game.wakeT = 0.07;
+      game.particles.push({ kind: 'foam', x: view.arkX - 64 + rand(-4, 4), y: view.seaY + 12 + rand(-2, 4), vx: 0, vy: 0, t: 0, life: 0.7, size: rand(3, 6), world: true });
+    }
+  }
+
+  scene.rainAmt = 0.55 * (1 - smoothstep(34, 48, game.time));
+  scene.rainbowAmt = smoothstep(54, 66, game.time);
+
+  game.score = Math.floor(game.distance / 32) + game.bonus;
+  if (!game.bestToast && game.prevBest > 0 && game.score > game.prevBest) {
+    game.bestToast = true;
+    toast('최고 기록을 넘었어요!');
+    audio.record();
+  }
+  const m = MILESTONES[game.milestone];
+  if (m && game.time >= m.t) {
+    game.milestone++;
+    toast(m.text);
+  }
+}
+
+function crash(hit) {
+  game.state = 'crash';
+  game.crashT = 0;
+  const a = game.ark;
+  a.boost = 0;
+  a.vy = Math.min(a.vy, 0) - 240;
+  a.wobble = 1;
+  crashBurst(hit.x, hit.y);
+  audio.crash();
+  shake(0.3);
+  flashAt(hit.x, hit.y);
+  game.finalScore = game.score;
+  game.isNewBest = game.score > game.best;
+  if (game.isNewBest) {
+    game.best = game.score;
+    store.set('best', game.best);
+  }
+}
+
+function updateCrash(dt) {
+  game.crashT += dt;
+  game.speed *= Math.exp(-dt * 9);
+  moveWorld(dt, game.speed);
+  stepArkFor(dt);
+  if (game.crashT >= 0.62) showGameOver();
+}
+
+/* ════════════════════════════════════════
+   12. 입자 효과: 별 반짝임, 물방울, 점수 글자
+   ════════════════════════════════════════ */
+function burstSparkles(x, y, type) {
+  const def = ITEM_TYPES[type];
+  const n = 10;
+  for (let i = 0; i < n; i++) {
+    const ang = (i / n) * TAU + rand(-0.25, 0.25);
+    const sp = rand(170, 270);
+    game.particles.push({
+      kind: 'star', x, y,
+      vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+      t: 0, life: 0.5, size: rand(6, 9.5),
+      rot: rand(0, TAU), vr: rand(-7, 7),
+      color: i % 2 ? '#FFFFFF' : '#FFE45C',
+    });
+  }
+  game.particles.push({ kind: 'ring', x, y, vx: 0, vy: 0, t: 0, life: 0.42, color: def.color });
+  game.floaters.push({ x, y: y - 16, text: '+' + ITEM_POINTS, t: 0, life: 0.9, ink: def.ink, glow: def.glow });
+}
+
+function splashAt(x, y, n) {
+  const colors = ['#FFFFFF', '#D4F8F3', '#94E4EE'];
+  for (let i = 0; i < n; i++) {
+    game.particles.push({
+      kind: 'drop', x: x + rand(-30, 30), y,
+      vx: rand(-140, 140), vy: rand(-330, -150),
+      t: 0, life: rand(0.45, 0.7), size: rand(2.5, 5),
+      color: colors[i % colors.length], world: true,
+    });
+  }
+}
+
+function crashBurst(x, y) {
+  const colors = ['#52DCFF', '#6C8BFF', '#A85BFF', '#FFFFFF'];
+  for (let i = 0; i < 22; i++) {
+    const ang = rand(0, TAU);
+    const sp = rand(220, 460);
+    game.particles.push({
+      kind: 'drop', x, y,
+      vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 120,
+      t: 0, life: rand(0.7, 0.95), size: rand(3, 7),
+      color: colors[i % colors.length],
+    });
+  }
+  for (let i = 0; i < 6; i++) {
+    const ang = (i / 6) * TAU;
+    game.particles.push({ kind: 'star', x, y, vx: Math.cos(ang) * 220, vy: Math.sin(ang) * 220, t: 0, life: 0.5, size: 7, rot: ang, vr: 5, color: '#FFFFFF' });
+  }
+  game.particles.push({ kind: 'ring', x, y, vx: 0, vy: 0, t: 0, life: 0.5, color: '#A85BFF' });
+}
+
+function updateParticles(dt, speed) {
+  for (let i = game.particles.length - 1; i >= 0; i--) {
+    const p = game.particles[i];
+    p.t += dt;
+    if (p.t >= p.life) { game.particles.splice(i, 1); continue; }
+    if (p.kind === 'star') {
+      const drag = Math.exp(-dt * 3.4);
+      p.vx *= drag;
+      p.vy *= drag;
+      p.rot += p.vr * dt;
+    } else if (p.kind === 'drop') {
+      p.vy += 900 * dt;
+    }
+    if (p.world) p.x -= speed * dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+  }
+  for (let i = game.floaters.length - 1; i >= 0; i--) {
+    const f = game.floaters[i];
+    f.t += dt;
+    if (f.t >= f.life) game.floaters.splice(i, 1);
+  }
+}
+
+function drawParticles(g) {
+  for (const p of game.particles) {
+    const k = p.t / p.life;
+    if (p.kind === 'star') {
+      g.save();
+      g.translate(p.x, p.y);
+      g.rotate(p.rot);
+      g.globalAlpha = 1 - Math.pow(k, 1.6);
+      g.shadowColor = 'rgba(255, 206, 60, .95)';
+      g.shadowBlur = 10 * view.ppu;
+      starPath(g, p.size * (1 - 0.35 * k));
+      g.fillStyle = p.color;
+      g.fill();
+      g.restore();
+    } else if (p.kind === 'ring') {
+      g.globalAlpha = (1 - k) * 0.9;
+      g.strokeStyle = p.color;
+      g.lineWidth = 4 * (1 - k) + 0.5;
+      g.beginPath();
+      g.arc(p.x, p.y, lerp(10, 52, easeOutCubic(k)), 0, TAU);
+      g.stroke();
+    } else if (p.kind === 'drop') {
+      g.globalAlpha = 1 - k * k;
+      g.fillStyle = p.color;
+      g.beginPath();
+      g.arc(p.x, p.y, p.size * (1 - 0.3 * k), 0, TAU);
+      g.fill();
+    } else if (p.kind === 'foam') {
+      g.globalAlpha = (1 - k) * 0.75;
+      g.fillStyle = '#FFFFFF';
+      g.beginPath();
+      g.ellipse(p.x, p.y, p.size * (1 + k * 1.6), p.size * 0.55 * (1 + k), 0, 0, TAU);
+      g.fill();
+    }
+  }
+  g.globalAlpha = 1;
+}
+
+function drawFloaters(g) {
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.lineJoin = 'round';
+  g.font = '400 30px Jua, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
+  for (const f of game.floaters) {
+    const k = f.t / f.life;
+    const y = f.y - 72 * easeOutCubic(k);
+    const s = k < 0.12 ? 1.4 - (k / 0.12) * 0.4 : 1;
+    g.save();
+    g.translate(f.x, y);
+    g.scale(s, s);
+    g.globalAlpha = k < 0.35 ? 1 : 1 - (k - 0.35) / 0.65;
+    g.shadowColor = f.glow;
+    g.shadowBlur = 14 * view.ppu;
+    g.lineWidth = 7;
+    g.strokeStyle = f.ink;
+    g.strokeText(f.text, 0, 0);
+    g.shadowBlur = 0;
+    g.fillStyle = '#FFFFFF';
+    g.fillText(f.text, 0, 0);
+    g.restore();
+  }
+}
+
+function drawItem(g, it) {
+  const y = itemY(it);
+  const halo = haloSprite(it.type);
+  const hs = halo.size * (1 + Math.sin(scene.clock * 3 + it.phase) * 0.08);
+  g.drawImage(halo.c, it.x - hs / 2, y - hs / 2, hs, hs);
+  g.save();
+  g.translate(it.x, y);
+  g.scale(1.14, 1.14);
+  ITEM_DRAW[it.type](g, scene.clock + it.phase);
+  g.restore();
+  const tw = Math.pow(Math.max(0, Math.sin(scene.clock * 2.3 + it.phase * 3)), 8);
+  if (tw > 0.02) {
+    g.save();
+    g.translate(it.x + 25, y - 23);
+    g.rotate(scene.clock * 1.5);
+    g.globalAlpha = tw;
+    sparklePath(g, 7);
+    g.fillStyle = '#FFFFFF';
+    g.fill();
+    g.restore();
+  }
+}
+
+/* ════════════════════════════════════════
+   13. 화면 그리기
+   ════════════════════════════════════════ */
+function render() {
+  const g = ctx;
+  g.setTransform(view.ppu, 0, 0, view.ppu, 0, 0);
+  g.globalAlpha = 1;
+  drawSky(g);
+  drawSun(g);
+  drawRainbow(g);
+  drawHills(g);
+  drawClouds(g, false);
+  drawRain(g, game.speed);
+  drawClouds(g, true);
+  drawWater(g, WATER_BACK);
+  drawWater(g, WATER_MID);
+  for (const o of game.waves) drawWave(g, o, scene.clock);
+  for (const it of game.items) drawItem(g, it);
+
+  const a = game.ark;
+  g.save();
+  g.translate(view.arkX, a.y);
+  g.rotate(a.angle);
+  g.scale(1 + 0.08 * a.squash - 0.04 * a.kick, 1 - 0.1 * a.squash + 0.06 * a.kick);
+  drawArk(g, scene.clock);
+  g.restore();
+
+  drawWater(g, WATER_FRONT);
+  drawArkShadow(g, view.arkX, view.seaY - a.y);
+  drawParticles(g);
+  drawFloaters(g);
+}
+
+/* ════════════════════════════════════════
+   14. 화면 위 UI
+   ════════════════════════════════════════ */
+const ui = {
+  scoreboard: $('scoreboard'),
+  score: $('score'),
+  hudBest: $('hud-best'),
+  titleBest: $('title-best'),
+  n: { lion: $('n-lion'), dove: $('n-dove'), olive: $('n-olive') },
+  f: { lion: $('f-lion'), dove: $('f-dove'), olive: $('f-olive') },
+  finalScore: $('final-score'),
+  finalBest: $('final-best'),
+  newRecord: $('new-record'),
+  screens: { title: $('screen-title'), pause: $('screen-pause'), over: $('screen-over') },
+  btnSound: $('btn-sound'),
+  btnPause: $('btn-pause'),
+  btnResume: $('btn-resume'),
+  btnRetry: $('btn-retry'),
+  toast: $('toast'),
+  flash: $('flash'),
+  prompt: $('prompt'),
+  shownScore: -1,
+  toastTimer: 0,
+};
+
+function showScreen(name) {
+  for (const key in ui.screens) ui.screens[key].hidden = key !== name;
+}
+
+function renderScore() {
+  if (game.score === ui.shownScore) return;
+  ui.shownScore = game.score;
+  ui.score.textContent = fmt(game.score);
+}
+
+function renderTallies() {
+  for (const k in ui.n) ui.n[k].textContent = game.counts[k];
+}
+
+function onCollect() {
+  renderTallies();
+  ui.score.classList.remove('pop');
+  void ui.score.offsetWidth;
+  ui.score.classList.add('pop');
+}
+
+function toast(text) {
+  ui.toast.textContent = text;
+  ui.toast.classList.add('show');
+  clearTimeout(ui.toastTimer);
+  ui.toastTimer = setTimeout(() => ui.toast.classList.remove('show'), 2400);
+}
+
+function flashAt(x, y) {
+  ui.flash.style.setProperty('--fx', ((x * view.scale) / view.cssW) * 100 + '%');
+  ui.flash.style.setProperty('--fy', ((y * view.scale) / view.cssH) * 100 + '%');
+  ui.flash.classList.remove('on');
+  void ui.flash.offsetWidth;
+  ui.flash.classList.add('on');
+}
+
+// 화면 전체(캔버스와 UI)를 0.3초 동안 흔듭니다.
+const shaker = { t: 0, dur: 0.3 };
+function shake(dur) { shaker.t = dur; shaker.dur = dur; }
+function applyShake(dt) {
+  if (shaker.t <= 0) return;
+  shaker.t -= dt;
+  if (shaker.t <= 0) { stage.style.transform = ''; return; }
+  const k = shaker.t / shaker.dur;
+  const calm = reducedMotion();
+  const mag = (calm ? 4 : 18) * k;
+  const r = calm ? 0 : rand(-1, 1) * 0.012 * k;
+  stage.style.transform = `translate3d(${(rand(-1, 1) * mag).toFixed(2)}px, ${(rand(-1, 1) * mag).toFixed(2)}px, 0) rotate(${r.toFixed(4)}rad) scale(${(1 + 0.035 * k).toFixed(4)})`;
+}
+
+function buildPrompt() {
+  const text = isTouch ? '화면을 터치해 방주를 구하세요!' : '스페이스바를 눌러 방주를 구하세요!';
+  const hl = isTouch ? '터치' : '스페이스바';
+  const from = text.indexOf(hl);
+  ui.prompt.textContent = '';
+  const said = document.createElement('span');
+  said.className = 'sr-only';
+  said.textContent = text;
+  ui.prompt.appendChild(said);
+  Array.from(text).forEach((ch, i) => {
+    const span = document.createElement('span');
+    span.className = 'ch' + (i >= from && i < from + hl.length ? ' hl' : '');
+    span.style.setProperty('--i', i);
+    span.setAttribute('aria-hidden', 'true');
+    span.textContent = ch;
+    ui.prompt.appendChild(span);
+  });
+}
+
+function paintIcons() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  document.querySelectorAll('canvas[data-icon]').forEach((c) => {
+    const css = parseFloat(getComputedStyle(c).width) || 30;
+    c.width = Math.round(css * dpr);
+    c.height = Math.round(css * dpr);
+    const g = c.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const type = c.dataset.icon;
+    if (type === 'wave') { waveIcon(g, css); return; }
+    g.translate(css / 2, css / 2);
+    g.scale(css / 60, css / 60);
+    ITEM_DRAW[type](g, 0.4);
+  });
+}
+
+function setSoundUi() {
+  ui.btnSound.setAttribute('aria-pressed', String(!audio.muted));
+}
+
+function toggleSound() {
+  audio.muted = !audio.muted;
+  store.set('muted', audio.muted ? '1' : '0');
+  if (audio.muted) {
+    if (audio.ctx) audio.ctx.suspend().catch(() => {});
+  } else {
+    audio.pickup();
+  }
+  setSoundUi();
+}
+
+/* ════════════════════════════════════════
+   15. 흐름: 시작, 멈춤, 게임 오버
+   ════════════════════════════════════════ */
+function clearWaves() {
+  for (const o of game.waves) spriteCache.delete('w' + o.id);
+  game.waves = [];
+}
+
+function startRun() {
+  audio.ensure();
+  audio.start();
+  clearWaves();
+  Object.assign(game, {
+    state: 'playing', time: 0, distance: 0, bonus: 0, score: 0, diff: 0,
+    speed: runSpeed(0), spawnIn: 1.5, itemIn: 0.75, lastWave: null, crashT: 0,
+    milestone: 0, bestToast: false, prevBest: game.best, isNewBest: false,
+    counts: { lion: 0, dove: 0, olive: 0 }, items: [], particles: [], floaters: [],
+  });
+  resetArk();
+  showScreen(null);
+  ui.scoreboard.classList.remove('is-away');
+  ui.btnPause.hidden = false;
+  ui.hudBest.textContent = fmt(game.best);
+  renderTallies();
+  renderScore();
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+  jump();
+}
+
+function pause() {
+  if (game.state !== 'playing') return;
+  game.state = 'paused';
+  showScreen('pause');
+  ui.btnPause.hidden = true;
+  ui.btnResume.focus({ preventScroll: true });
+}
+
+function resume() {
+  if (game.state !== 'paused') return;
+  game.state = 'playing';
+  showScreen(null);
+  ui.btnPause.hidden = false;
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+}
+
+function togglePause() {
+  if (game.state === 'playing') pause();
+  else if (game.state === 'paused') resume();
+}
+
+function showGameOver() {
+  game.state = 'over';
+  ui.finalScore.textContent = fmt(game.finalScore);
+  ui.finalBest.textContent = fmt(game.best);
+  ui.newRecord.hidden = !(game.isNewBest && game.finalScore > 0);
+  for (const k in ui.f) ui.f[k].textContent = game.counts[k];
+  ui.titleBest.textContent = fmt(game.best);
+  ui.hudBest.textContent = fmt(game.best);
+  showScreen('over');
+  ui.scoreboard.classList.add('is-away');
+  ui.btnPause.hidden = true;
+  game.lockUntil = performance.now() + 700;
+  if (game.isNewBest && game.finalScore > 0 && game.prevBest > 0) audio.record();
+  setTimeout(() => { if (game.state === 'over') ui.btnRetry.focus({ preventScroll: true }); }, 80);
+}
+
+function tryRestart() {
+  if (game.state === 'over' && performance.now() >= game.lockUntil) startRun();
+}
+
+function action() {
+  if (game.state === 'title') startRun();
+  else if (game.state === 'playing') jump();
+  else if (game.state === 'paused') resume();
+  else if (game.state === 'over') tryRestart();
+}
+
+/* ════════════════════════════════════════
+   16. 입력
+   ════════════════════════════════════════ */
+window.addEventListener('keydown', (e) => {
+  const code = e.code;
+  if (code === 'Space' || code === 'ArrowUp' || code === 'KeyW') {
+    e.preventDefault();
+    if (!e.repeat) action();
+  } else if (code === 'Enter' && game.state === 'title' && !e.target.closest('button')) {
+    e.preventDefault();
+    startRun();
+  } else if (code === 'KeyP' || code === 'Escape') {
+    togglePause();
+  } else if (code === 'KeyM') {
+    toggleSound();
+  }
+});
+
+stage.addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  if (e.target.closest('button')) return;
+  if (game.state === 'title' || game.state === 'playing') {
+    e.preventDefault();
+    action();
+  }
+});
+
+ui.btnSound.addEventListener('click', toggleSound);
+ui.btnPause.addEventListener('click', pause);
+ui.btnResume.addEventListener('click', resume);
+ui.btnRetry.addEventListener('click', tryRestart);
+
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+window.addEventListener('blur', pause);
+
+function onResize() {
+  const oldSea = view.seaY;
+  resize();
+  const dy = view.seaY - oldSea;
+  game.ark.y += dy;
+  // 물기둥 길이는 바다 높이에 따라 달라지므로 새로 만듭니다.
+  game.waves = game.waves.map((o) => (isPour(o) ? buildWave(specOf(o)) : o));
+  for (const p of game.particles) p.y += dy;
+  for (const f of game.floaters) f.y += dy;
+}
+let resizeTimer = 0;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(onResize, 90);
+});
+
+function resize() {
+  const cssW = Math.max(1, stage.clientWidth);
+  const cssH = Math.max(1, stage.clientHeight);
+  const scale = Math.min(cssH / REF_H, cssW / MIN_VIEW_W);
+  let dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const budget = 3.6e6;
+  if (cssW * cssH * dpr * dpr > budget) dpr = Math.max(1, Math.sqrt(budget / (cssW * cssH)));
+  Object.assign(view, { cssW, cssH, dpr, scale, ppu: scale * dpr, W: cssW / scale, H: cssH / scale });
+  view.seaY = view.H - SEA_DEPTH;
+  view.arkX = clamp(view.W * 0.24, 130, 300);
+  canvas.width = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  spriteCache.clear();
+  buildScene();
+}
+
+/* ════════════════════════════════════════
+   17. 반복 실행
+   ════════════════════════════════════════ */
+let last = performance.now();
+function step(dt) {
+  applyShake(dt);
+  if (game.state === 'paused') return;
+  if (game.state === 'playing') {
+    updatePlaying(dt);
+  } else if (game.state === 'crash') {
+    updateCrash(dt);
+  } else {
+    game.speed = game.state === 'title' ? 60 : game.speed * Math.exp(-dt * 4);
+    if (game.state === 'title') { scene.rainAmt = 0.5; scene.rainbowAmt = 0; }
+    moveWorld(dt, game.speed);
+    stepArkFor(dt);
+  }
+  updateScene(dt, game.speed);
+  updateArkVisual(dt);
+  updateParticles(dt, game.speed);
+  renderScore();
+}
+
+function loop(now) {
+  let dt = (now - last) / 1000;
+  last = now;
+  if (!(dt > 0)) dt = 0;
+  if (dt > 0.05) dt = 0.05;
+  step(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+/* ════════════════════════════════════════
+   18. 시작 준비 (게시본을 고쳐 올려도 진행 중인 판을 이어 줍니다)
+   ════════════════════════════════════════ */
+function snapshot() {
+  if (game.state !== 'playing' && game.state !== 'paused') return {};
+  return {
+    run: {
+      time: game.time, distance: game.distance, bonus: game.bonus, counts: { ...game.counts },
+      alt: view.seaY - game.ark.y, spawnIn: game.spawnIn, itemIn: game.itemIn,
+      milestone: game.milestone, bestToast: game.bestToast, prevBest: game.prevBest,
+      waves: game.waves.map(specOf),
+      items: game.items.map(({ type, x, alt, phase, t }) => ({ type, x, alt, phase, t })),
+    },
+  };
+}
+
+function restoreRun(r) {
+  try {
+    Object.assign(game, {
+      time: r.time, distance: r.distance, bonus: r.bonus, counts: { ...r.counts },
+      spawnIn: r.spawnIn, itemIn: r.itemIn, milestone: r.milestone, bestToast: r.bestToast, prevBest: r.prevBest,
+    });
+    game.diff = difficulty(game.time);
+    game.speed = runSpeed(game.diff);
+    game.waves = r.waves.map(buildWave);
+    game.items = r.items.map((it) => ({ ...it }));
+    resetArk();
+    game.ark.y = view.seaY - r.alt;
+    game.score = Math.floor(game.distance / 32) + game.bonus;
+    scene.rainAmt = 0.55 * (1 - smoothstep(34, 48, game.time));
+    scene.rainbowAmt = smoothstep(54, 66, game.time);
+    ui.scoreboard.classList.remove('is-away');
+    ui.hudBest.textContent = fmt(game.best);
+    renderTallies();
+    game.state = 'playing';
+    pause();
+  } catch (err) {
+    clearWaves();
+    game.items = [];
+    game.state = 'title';
+    showScreen('title');
+  }
+}
+
+function init(data) {
+  resize();
+  resetArk();
+  buildPrompt();
+  paintIcons();
+  setSoundUi();
+  ui.titleBest.textContent = fmt(game.best);
+  ui.hudBest.textContent = fmt(game.best);
+  if (data && data.run) restoreRun(data.run);
+  if (document.fonts && document.fonts.load) document.fonts.load('30px "Jua"').catch(() => {});
+  last = performance.now();
+  requestAnimationFrame(loop);
+}
+
+const hot = window.claude && window.claude.hot;
+if (hot && typeof hot.snapshot === 'function') hot.snapshot(snapshot);
+if (hot && typeof hot.ready === 'function') hot.ready(init);
+else init((hot && hot.data) || {});
+})();
+</script>
+</body>
+</html>
