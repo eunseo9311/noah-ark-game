@@ -1853,7 +1853,9 @@ function spawnWaves() {
       break;
     case 'pour': {
       const hw = rand(42, 56);
-      made.push(buildWave({ type, x: x + hw, hw, alt: rand(150, Math.min(340, view.seaY - 140)), ph: rand(0, TAU) }));
+      // 높은 쌍둥이 물결 바로 뒤에 너무 낮은 물기둥이 오면 내려올 틈이 없어서 조금 높여 둡니다.
+      const minAlt = prev && prev.type === 'twin' ? 190 : 150;
+      made.push(buildWave({ type, x: x + hw, hw, alt: rand(minAlt, Math.min(340, view.seaY - 140)), ph: rand(0, TAU) }));
       break;
     }
     case 'gate': {
@@ -2498,9 +2500,9 @@ window.addEventListener('keydown', (e) => {
   } else if (code === 'Enter' && game.state === 'title' && !e.target.closest('button')) {
     e.preventDefault();
     startRun();
-  } else if (code === 'KeyP' || code === 'Escape') {
+  } else if ((code === 'KeyP' || code === 'Escape') && !e.repeat) {
     togglePause();
-  } else if (code === 'KeyM') {
+  } else if (code === 'KeyM' && !e.repeat) {
     toggleSound();
   }
 });
@@ -2524,13 +2526,18 @@ window.addEventListener('blur', pause);
 
 function onResize() {
   const oldSea = view.seaY;
+  const oldArkX = view.arkX;
   resize();
   const dy = view.seaY - oldSea;
+  const dx = view.arkX - oldArkX;
   game.ark.y += dy;
+  // 화면을 돌리면 방주 x도 바뀌므로, 파도와 아이템을 같은 만큼 옮겨 방주와의 거리를 지킵니다.
+  for (const o of game.waves) o.x += dx;
+  for (const it of game.items) it.x += dx;
+  for (const p of game.particles) { p.x += dx; p.y += dy; }
+  for (const f of game.floaters) { f.x += dx; f.y += dy; }
   // 물기둥 길이는 바다 높이에 따라 달라지므로 새로 만듭니다.
   game.waves = game.waves.map((o) => (isPour(o) ? buildWave(specOf(o)) : o));
-  for (const p of game.particles) p.y += dy;
-  for (const f of game.floaters) f.y += dy;
 }
 let resizeTimer = 0;
 window.addEventListener('resize', () => {
@@ -2595,7 +2602,7 @@ function snapshot() {
   return {
     run: {
       time: game.time, distance: game.distance, bonus: game.bonus, counts: { ...game.counts },
-      alt: view.seaY - game.ark.y, spawnIn: game.spawnIn, itemIn: game.itemIn,
+      alt: view.seaY - game.ark.y, arkX: view.arkX, spawnIn: game.spawnIn, itemIn: game.itemIn,
       milestone: game.milestone, bestToast: game.bestToast, prevBest: game.prevBest,
       waves: game.waves.map(specOf),
       items: game.items.map(({ type, x, alt, phase, t }) => ({ type, x, alt, phase, t })),
@@ -2611,11 +2618,13 @@ function restoreRun(r) {
     });
     game.diff = difficulty(game.time);
     game.speed = runSpeed(game.diff);
-    game.waves = r.waves.map(buildWave);
-    game.items = r.items.map((it) => ({ ...it }));
+    const shift = view.arkX - (r.arkX ?? view.arkX);
+    game.waves = r.waves.map((spec) => buildWave({ ...spec, x: spec.x + shift }));
+    game.items = r.items.map((it) => ({ ...it, x: it.x + shift }));
     resetArk();
     game.ark.y = view.seaY - r.alt;
     game.score = Math.floor(game.distance / 32) + game.bonus;
+    renderScore();
     scene.rainAmt = 0.55 * (1 - smoothstep(34, 48, game.time));
     scene.rainbowAmt = smoothstep(54, 66, game.time);
     ui.scoreboard.classList.remove('is-away');
